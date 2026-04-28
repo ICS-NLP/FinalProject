@@ -1,5 +1,17 @@
 # Experiment log — AfriHate cross-lingual transfer study
 
+## Repository layout (where things live)
+
+| Location | Purpose |
+|----------|---------|
+| [`experiments/`](experiments/) | **Phase notebooks** (01–03) + per-phase READMEs |
+| [`results/best_experiment_e4/`](results/best_experiment_e4/) | **Headline E4** figures and a short results summary for the report |
+| `Checkpoints/` | `experiment_log.csv`, `training_log_*.csv` (all phases append here) |
+| `Phase2_Outputs/` | Phase 2 CSVs, plots, error analysis markdown |
+| `Phase3_Outputs/` | Phase 3 transfer gap, confusion matrices, matched LLM subset artefacts |
+| `Final_Source_Model/` | Best Phase 1 checkpoint (weights gitignored) |
+| [`scripts/`](scripts/) | `compare_encoder_llm_matched_subset.py`, `make_training_curves.py`, `make_error_summary.py` |
+
 This file is the **single source of truth** for what was run, with what hyperparameters, and what we measured. Aggregated metrics live in `Checkpoints/experiment_log.csv`; per-run training curves live in `Checkpoints/training_log_*.csv` and rendered PNGs in `Phase2_Outputs/`. The few-shot CSV is `Phase2_Outputs/few_shot_results.csv`, the qualitative error report is `Phase2_Outputs/zero_shot_error_summary.md`, and the transfer-gap CSV is `Phase3_Outputs/transfer_gap_summary.csv`.
 
 ---
@@ -19,9 +31,9 @@ This file is the **single source of truth** for what was run, with what hyperpar
 
 | Phase | Notebook | What it produces |
 |---|---|---|
-| 1 — Source fine-tune & zero-shot | `Source_Model_FineTuning.ipynb` | E1–E4 rows, source checkpoint, `training_log_history.csv` |
-| 2 — Few-shot + error analysis | `Phase2_FewShot_And_ErrorAnalysis.ipynb` | `few_shot_results.csv`, `few_shot_curve.png`, `zero_shot_errors_sample.csv` |
-| 3 — Target supervised ceiling + (optional) LLM baseline | `Phase3_TargetSupervised_LLM_Baseline.ipynb` | T1, T2 rows, per-target confusion matrices, `transfer_gap_summary.csv` |
+| 1 — Source fine-tune & zero-shot | [`experiments/01_phase1_source_finetuning_zeroshot/Source_Model_FineTuning.ipynb`](experiments/01_phase1_source_finetuning_zeroshot/Source_Model_FineTuning.ipynb) | E1–E4 rows, source checkpoint, `training_log_history.csv` |
+| 2 — Few-shot + error analysis | [`experiments/02_phase2_fewshot_error_analysis/Phase2_FewShot_And_ErrorAnalysis.ipynb`](experiments/02_phase2_fewshot_error_analysis/Phase2_FewShot_And_ErrorAnalysis.ipynb) | `few_shot_results.csv`, `few_shot_curve.png`, `zero_shot_errors_sample.csv` |
+| 3 — Target supervised ceiling + (optional) LLM baseline | [`experiments/03_phase3_supervised_ceiling_llm/Phase3_TargetSupervised_LLM_Baseline.ipynb`](experiments/03_phase3_supervised_ceiling_llm/Phase3_TargetSupervised_LLM_Baseline.ipynb) | T1, T2 rows, per-target confusion matrices, `transfer_gap_summary.csv` |
 
 ### Predefined experiment IDs (auto-assigned when `NLP_EXPERIMENT_ID` is unset)
 
@@ -84,7 +96,7 @@ The 76L encoder is uniformly the strongest in-distribution learner.
 
 ## 4. Phase 2 — few-shot adaptation (source = E4)
 
-`Phase2_FewShot_And_ErrorAnalysis.ipynb` resumes the best Phase-1 checkpoint (`Final_Source_Model/`, 76L on hau+amh+yor) and fine-tunes on a tiny labeled budget per target. Knobs: `NLP_FEWSHOT_LR=8e-6`, `NLP_FEWSHOT_EPOCHS=6`. Curve: `Phase2_Outputs/few_shot_curve.png`.
+`experiments/02_phase2_fewshot_error_analysis/Phase2_FewShot_And_ErrorAnalysis.ipynb` resumes the best Phase-1 checkpoint (`Final_Source_Model/`, 76L on hau+amh+yor) and fine-tunes on a tiny labeled budget per target. Knobs: `NLP_FEWSHOT_LR=8e-6`, `NLP_FEWSHOT_EPOCHS=6`. Curve: `Phase2_Outputs/few_shot_curve.png`.
 
 ### Twi (`698` test rows)
 
@@ -131,7 +143,7 @@ Confusion matrices: `Phase3_Outputs/confusion_T1_supervised_twi.csv`, `Phase3_Ou
 | pcm | 0.584 | 0.593 | 0.655 | **+0.071** | **0.89** | 11.7% of the gap |
 
 **Phase 3 takeaways.**
-- **Cross-lingual zero-shot from Hau+Amh+Yor recovers 83% of the Twi supervised ceiling and 89% of the Pidgin ceiling.** That answers RQ3 directly and gives the report a single defensible "transfer gap" headline.
+- **Cross-lingual zero-shot from Hau+Amh+Yor recovers ~91% of the Twi supervised ceiling and ~88% of the Pidgin ceiling** (ratio = zero-shot F1 / supervised F1 in `Phase3_Outputs/transfer_gap_summary.csv`). That answers RQ3 directly and gives the report a single defensible "transfer gap" headline.
 - The **Twi supervised baseline collapses on the `Normal` class** (`num_pred_classes_used = 2`): Twi's training distribution is dominated by `Abuse`, so vanilla cross-entropy fine-tuning never learns to predict `Normal`. This is itself a finding — the AfriHate Twi split is class-imbalanced enough that *direct* supervised fine-tuning on a small target set can be worse on macro-F1 than transfer from a balanced multi-language source. Phase-1 zero-shot recovers `Normal` because Hausa/Amharic/Yoruba contribute many `Normal` examples.
 - The **Pidgin supervised baseline** uses all three classes and produces a clean ceiling around macro-F1 = 0.66.
 
@@ -139,7 +151,7 @@ Confusion matrices: `Phase3_Outputs/confusion_T1_supervised_twi.csv`, `Phase3_Ou
 
 ## 6. Optional LLM baseline (prompt-only)
 
-`Phase3_TargetSupervised_LLM_Baseline.ipynb` ships a cell that — when `OPENAI_API_KEY` is exported — runs a zero-shot or 5-shot prompt baseline against a sampled subset of each target's official test split (`NLP_LLM_MAX_EXAMPLES=200` by default for cost control) and writes `LLM0_<target>_<mode>` rows into `experiment_log.csv`. Without the key the cell prints a clear *skipped* notice so the headless runs stay deterministic.
+`experiments/03_phase3_supervised_ceiling_llm/Phase3_TargetSupervised_LLM_Baseline.ipynb` ships a cell that — when `OPENAI_API_KEY` is exported — runs a zero-shot or 5-shot prompt baseline against a sampled subset of each target's official test split (`NLP_LLM_MAX_EXAMPLES=200` by default for cost control) and writes `LLM0_<target>_<mode>` rows into `experiment_log.csv`. Without the key the cell prints a clear *skipped* notice so the headless runs stay deterministic.
 
 The LLM is instructed to return **JSON only** (`{"label":"Abuse|Hate|Normal","confidence":…}`) with `response_format={"type":"json_object"}` and `max_tokens=128`, plus a regex fallback if the API rejects JSON mode. That fixes an earlier bug where `max_tokens=4` truncated replies and the parser fell back to a single class for every example. Set `NLP_LLM_DEBUG=1` to print parse failures. Re-running overwrites matching rows in `experiment_log.csv`.
 
@@ -152,7 +164,7 @@ The cell supports `NLP_LLM_MODE=zeroshot|fewshot` and `NLP_LLM_MODEL=gpt-4o-mini
 The LLM cell uses `pandas.sample(N, random_state=42)` on each target's official test split (`N = NLP_LLM_MAX_EXAMPLES`, default 200). Run:
 
 ```bash
-.venv/bin/python compare_encoder_llm_matched_subset.py
+.venv/bin/python scripts/compare_encoder_llm_matched_subset.py
 ```
 
 This writes `Phase3_Outputs/matched_subset_encoder_vs_llm.csv`, saves the exact AfriHate test **row indices** (`matched_subset_indices_twi.json`, `matched_subset_indices_pcm.json`), and appends **`E4_encoder_matchedLLMsubset_{twi,pcm}`** rows to `experiment_log.csv` (`setting=zero_shot_matched_llm_subset`, same `subset` string as the `LLM0_*` rows).
@@ -201,7 +213,9 @@ For every fine-tune we save a `Checkpoints/training_log_<id>.csv` and render two
 Re-render any time after training:
 
 ```bash
-.venv/bin/python make_training_curves.py
+.venv/bin/python scripts/make_training_curves.py
+.venv/bin/python scripts/make_error_summary.py
+.venv/bin/python scripts/compare_encoder_llm_matched_subset.py
 ```
 
 The Phase-1 curve in particular shows training loss decaying smoothly while validation loss plateaus around step 800 — the saved best checkpoint is taken from the `f1_macro` peak at the same step, so we are not over-fitting.
@@ -225,13 +239,13 @@ unset NLP_EXPERIMENT_ID NLP_SOURCE_LANGS NLP_MODEL NLP_LR \
 export NLP_MODEL=Davlan/afro-xlmr-large-76L
 export NLP_SOURCE_LANGS=hau,amh,yor
 export NLP_NUM_EPOCHS=4
-./execute_notebook.sh Source_Model_FineTuning.ipynb
+./execute_notebook.sh experiments/01_phase1_source_finetuning_zeroshot/Source_Model_FineTuning.ipynb
 ```
 
 ### Phase 2 — few-shot adaptation against the saved E4 checkpoint
 
 ```bash
-./execute_notebook.sh Phase2_FewShot_And_ErrorAnalysis.ipynb
+./execute_notebook.sh experiments/02_phase2_fewshot_error_analysis/Phase2_FewShot_And_ErrorAnalysis.ipynb
 ```
 
 ### Phase 3 — supervised ceilings (and optional LLM baseline)
@@ -240,22 +254,14 @@ export NLP_NUM_EPOCHS=4
 export NLP_TARGET_EPOCHS=4 NLP_TARGET_LR=2e-5
 # Optional: export OPENAI_API_KEY=... NLP_LLM_MODEL=gpt-4o-mini NLP_LLM_MODE=zeroshot
 # LLM-only (skip ~1h supervised re-run): export NLP_PHASE3_SKIP_SUPERVISED=1
-./execute_notebook.sh Phase3_TargetSupervised_LLM_Baseline.ipynb
-```
-
-### Re-render plots / error summary
-
-```bash
-.venv/bin/python make_training_curves.py
-.venv/bin/python make_error_summary.py
-.venv/bin/python compare_encoder_llm_matched_subset.py
+./execute_notebook.sh experiments/03_phase3_supervised_ceiling_llm/Phase3_TargetSupervised_LLM_Baseline.ipynb
 ```
 
 ---
 
 ## 10. What the report can claim
 
-1. **Cross-lingual transfer is viable for AfriHate**: a multilingual encoder fine-tuned only on Hausa+Amharic+Yoruba reaches **83 % of the Twi supervised ceiling** and **89 % of the Pidgin ceiling** with **zero target labels**.
+1. **Cross-lingual transfer is viable for AfriHate**: a multilingual encoder fine-tuned only on Hausa+Amharic+Yoruba reaches **~91% of the Twi supervised ceiling** and **~88% of the Pidgin ceiling** with **zero target labels** (see `transfer_gap_summary.csv` for exact ratios).
 2. **Adding a typologically related source language matters more than scaling the encoder**: adding Yoruba lifts Twi zero-shot F1 by ≈10 absolute points. The 76L encoder helps Pidgin most (E4 best on Pidgin) but does not unlock Twi by itself.
 3. **Few-shot k=5 is enough for Pidgin** but does **not** rescue Twi: Twi failures are dominated by *vocabulary* the source model never saw, not just decision-boundary calibration.
 4. **Failure modes are linguistically interpretable**: over-flagging on identity tokens, under-flagging on Akan-specific slurs, and ethnic-group hate framed as agreement in Pidgin. These have direct ethical implications for deployment.

@@ -8,16 +8,18 @@ Produces two PNGs per log:
   * `<basename>_metrics.png` — eval F1-macro and balanced accuracy
 
 Run:
-    .venv/bin/python make_training_curves.py
+    .venv/bin/python scripts/make_training_curves.py
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-import pandas as pd
+_REPO = Path(__file__).resolve().parent.parent
+if str(_REPO) not in sys.path:
+    sys.path.insert(0, str(_REPO))
+from project_paths import ROOT
 
-ROOT = Path(__file__).resolve().parent
 CHECKPOINTS = ROOT / "Checkpoints"
 OUT_DIR = ROOT / "Phase2_Outputs"
 OUT_DIR.mkdir(exist_ok=True)

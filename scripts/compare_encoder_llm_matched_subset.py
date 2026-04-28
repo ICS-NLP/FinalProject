@@ -14,11 +14,15 @@ experiment_id + setting + subset) so the report can cite them next to
 `LLM0_*_zeroshot`.
 
 Requires: HF_TOKEN (or huggingface-cli login), network for dataset load.
+
+Run:
+    .venv/bin/python scripts/compare_encoder_llm_matched_subset.py
 """
 from __future__ import annotations
 
 import json
 import os
+import sys
 import warnings
 from pathlib import Path
 
@@ -26,6 +30,10 @@ os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 warnings.filterwarnings("ignore", message=r".*pin_memory.*")
 
+_REPO = Path(__file__).resolve().parent.parent
+if str(_REPO) not in sys.path:
+    sys.path.insert(0, str(_REPO))
+from project_paths import ROOT
 import numpy as np
 import pandas as pd
 import torch
@@ -52,7 +60,6 @@ disable_progress_bar()
 disable_progress_bars()
 transformers_logging.set_verbosity_error()
 
-ROOT = Path(__file__).resolve().parent
 CHECKPOINT_DIR = ROOT / "Checkpoints"
 OUT_DIR = ROOT / "Phase3_Outputs"
 OUT_DIR.mkdir(exist_ok=True)

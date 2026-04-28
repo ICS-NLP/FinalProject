@@ -4,44 +4,48 @@ Multilingual fine-tuning (**Hausa, Amharic**, optional **Yoruba**) and **zero-sh
 
 **Upstream repo:** [https://github.com/ICS-NLP/FinalProject](https://github.com/ICS-NLP/FinalProject)
 
-## What’s in this repo
+## Repository layout
 
 | Path | Contents |
 |------|----------|
-| `Source_Model_FineTuning.ipynb` | Phase 1 — source fine-tune + zero-shot evaluation, writes `experiment_log.csv` |
-| `Phase2_FewShot_And_ErrorAnalysis.ipynb` | Phase 2 — k=5/10/20 few-shot adaptation + error sampling |
-| `Phase3_TargetSupervised_LLM_Baseline.ipynb` | Phase 3 — supervised target ceiling (Twi, Pidgin) + optional LLM baseline (skipped without `OPENAI_API_KEY`) |
-| `compare_encoder_llm_matched_subset.py` | **Same 200-row slice** as LLM: scores `Final_Source_Model` + writes `matched_subset_encoder_vs_llm.csv` |
-| `make_training_curves.py` | Renders train/val loss + eval-metric PNGs from any `Checkpoints/training_log_*.csv` |
-| `make_error_summary.py` | Categorises `zero_shot_errors_sample.csv` into `zero_shot_error_summary.md` |
-| `Checkpoints/` | `experiment_log.csv`, `results_report_table.csv`, `training_log_*.csv` |
-| `Phase2_Outputs/` | `few_shot_results.csv`, `few_shot_curve.png`, `zero_shot_error_summary.md`, training-curve PNGs |
-| `Phase3_Outputs/` | `transfer_gap_summary.csv`, confusion matrices, `matched_subset_encoder_vs_llm.csv`, index JSONs |
-| `Final_Source_Model/` | Config + tokenizer only on GitHub (see below) |
-| `EXPERIMENTS.md` | Full run matrix, transfer-gap analysis, error patterns, reproduction commands |
-| `execute_notebook.sh` | Headless run with project `.venv` kernel |
+| [`experiments/`](experiments/) | Phase **01–03** notebooks + short READMEs per phase |
+| [`results/best_experiment_e4/`](results/best_experiment_e4/) | **Headline configuration (E4)** — key figures + summary for the report |
+| [`scripts/`](scripts/) | Helper CLIs (`compare_encoder_llm_matched_subset.py`, `make_training_curves.py`, `make_error_summary.py`) |
+| `project_paths.py` | Shared `repo_root()` for scripts |
+| `Checkpoints/` | `experiment_log.csv`, `training_log_*.csv` (all phases write here) |
+| `Phase2_Outputs/` | Few-shot CSVs, plots, qualitative error markdown |
+| `Phase3_Outputs/` | Transfer gap, confusion matrices, matched LLM subset artefacts |
+| `Final_Source_Model/` | Best Phase 1 checkpoint (weights are **gitignored**; see below) |
+| [`EXPERIMENTS.md`](EXPERIMENTS.md) | Full experiment matrix, metrics, reproduction commands |
+| `execute_notebook.sh` | Headless notebook execution (default = Phase 1 notebook) |
 
 ## Model weights (not stored on GitHub)
 
-`*.safetensors` files are **gitignored** (100 MB limit on GitHub). After cloning:
+`*.safetensors` files are **gitignored** (GitHub 100 MB blob limit). After cloning:
 
 1. Create a Hugging Face token, accept the [AfriHate dataset](https://huggingface.co/datasets/afrihate/afrihate) terms, set `HF_TOKEN` in `.env` or `huggingface-cli login`.
-2. Run `Source_Model_FineTuning.ipynb` (or `./execute_notebook.sh Source_Model_FineTuning.ipynb`) to fine-tune and write `model.safetensors` into `Final_Source_Model/`.
-3. Optional: push your trained folder to the [Hugging Face Hub](https://huggingface.co/docs/huggingface_hub/guides/upload) as a model repo.
+2. Run Phase 1 (see below) to fine-tune and write `model.safetensors` into `Final_Source_Model/`.
+3. Optional: upload weights to the [Hugging Face Hub](https://huggingface.co/docs/huggingface_hub/guides/upload).
 
-## Quick start
+## Quick start (from this directory)
 
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 # .env with HF_TOKEN …
 unset NLP_EXPERIMENT_ID NLP_SOURCE_LANGS NLP_MODEL NLP_LR NLP_NUM_EPOCHS
-./execute_notebook.sh Source_Model_FineTuning.ipynb
-./execute_notebook.sh Phase2_FewShot_And_ErrorAnalysis.ipynb
-./execute_notebook.sh Phase3_TargetSupervised_LLM_Baseline.ipynb
-.venv/bin/python compare_encoder_llm_matched_subset.py
-.venv/bin/python make_training_curves.py
-.venv/bin/python make_error_summary.py
+
+# Default: Phase 1 E4-style run (override with env vars — see EXPERIMENTS.md)
+./execute_notebook.sh
+
+./execute_notebook.sh experiments/02_phase2_fewshot_error_analysis/Phase2_FewShot_And_ErrorAnalysis.ipynb
+./execute_notebook.sh experiments/03_phase3_supervised_ceiling_llm/Phase3_TargetSupervised_LLM_Baseline.ipynb
+
+.venv/bin/python scripts/make_training_curves.py
+.venv/bin/python scripts/make_error_summary.py
+.venv/bin/python scripts/compare_encoder_llm_matched_subset.py
 ```
 
-See `EXPERIMENTS.md` for experiment IDs (E1–E4 zero-shot + T1/T2 supervised), the headline transfer-gap numbers, and recommended `NLP_MODEL` / `NLP_SOURCE_LANGS` settings.
+Notebooks call `os.chdir` to the **repo root** on startup, so output paths (`Checkpoints/`, `Phase2_Outputs/`, …) stay stable even though `.ipynb` files live under `experiments/`.
+
+See [`EXPERIMENTS.md`](EXPERIMENTS.md) for experiment IDs (E1–E4, T1–T2, LLM, matched subset), transfer-gap headline, and recommended `NLP_MODEL` / `NLP_SOURCE_LANGS` settings.

@@ -7,6 +7,8 @@ data/
 Checkpoints/checkpoint-*/
 Phase2_Outputs/fewshot_*/
 Phase3_Outputs/runs_*/
+tmp_matched_subset_eval/
+tmp_eval_out/
 .ipynb_checkpoints/
 
 # GitHub rejects blobs > 100 MB. Full weights: train locally or upload to Hugging Face Hub / use Git LFS.

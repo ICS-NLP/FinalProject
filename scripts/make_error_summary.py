@@ -13,11 +13,16 @@ Output: `Phase2_Outputs/zero_shot_error_summary.md`
 from __future__ import annotations
 
 from collections import defaultdict
+import sys
 from pathlib import Path
 
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent
+_REPO = Path(__file__).resolve().parent.parent
+if str(_REPO) not in sys.path:
+    sys.path.insert(0, str(_REPO))
+from project_paths import ROOT
+
 SRC = ROOT / "Phase2_Outputs" / "zero_shot_errors_sample.csv"
 OUT = ROOT / "Phase2_Outputs" / "zero_shot_error_summary.md"
 
