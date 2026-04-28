@@ -3,8 +3,10 @@ venv/
 __pycache__/
 data/
 .env
+.mplcache/
 Checkpoints/checkpoint-*/
 Phase2_Outputs/fewshot_*/
+Phase3_Outputs/runs_*/
 .ipynb_checkpoints/
 
 # GitHub rejects blobs > 100 MB. Full weights: train locally or upload to Hugging Face Hub / use Git LFS.
