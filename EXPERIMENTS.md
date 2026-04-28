@@ -145,6 +145,8 @@ The LLM is instructed to return **JSON only** (`{"label":"Abuse|Hate|Normal","co
 
 The cell supports `NLP_LLM_MODE=zeroshot|fewshot` and `NLP_LLM_MODEL=gpt-4o-mini|gpt-4o|...`.
 
+**Billing / quota.** If the account has **no credits** or the key is over quota, OpenAI returns **429 `insufficient_quota`**. The notebook then falls back to `Normal` on each failed call, so `experiment_log.csv` can show **`pred_majority_frac = 1.0`** and very low F1 even though the JSON parser is fixed. After a run, check stdout (first few API errors) and the **`notes`** column (`api_errors=…`, `INVALID_METRICS` when ≥90% of calls failed).
+
 ---
 
 ## 7. Qualitative error analysis (RQ4)
