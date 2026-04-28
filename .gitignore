@@ -10,6 +10,7 @@ Phase3_Outputs/runs_*/
 tmp_matched_subset_eval/
 tmp_eval_out/
 .ipynb_checkpoints/
+Weights_export/
 
 # GitHub rejects blobs > 100 MB. Full weights: train locally or upload to Hugging Face Hub / use Git LFS.
 # HF Trainer.save_model → model.safetensors (or pytorch_model.bin). We do not use .pth in this repo.

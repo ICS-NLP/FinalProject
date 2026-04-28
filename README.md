@@ -41,9 +41,12 @@ unset NLP_EXPERIMENT_ID NLP_SOURCE_LANGS NLP_MODEL NLP_LR NLP_NUM_EPOCHS
 ./execute_notebook.sh experiments/Experiment_2/Phase2_FewShot_And_ErrorAnalysis.ipynb
 ./execute_notebook.sh experiments/Experiment_3/Phase3_TargetSupervised_LLM_Baseline.ipynb
 
+.venv/bin/python scripts/sync_metrics_tables.py
 .venv/bin/python scripts/make_training_curves.py
 .venv/bin/python scripts/make_error_summary.py
 .venv/bin/python scripts/compare_encoder_llm_matched_subset.py
+# Optional: single-file PyTorch bundle (~2 GB, gitignored by default)
+# .venv/bin/python scripts/export_e4_model_to_pth.py
 ```
 
 Notebooks call `os.chdir` to the **repo root** on startup, so output paths (`Checkpoints/`, `Phase2_Outputs/`, …) stay stable even though `.ipynb` files live under `experiments/`.

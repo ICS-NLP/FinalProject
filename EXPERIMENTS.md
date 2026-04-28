@@ -17,7 +17,13 @@
 | `normalize_notebook_json.py` | Used by `execute_notebook.sh` before `nbconvert` |
 | `requirements.txt`, `execute_notebook.sh`, `README.md` | Environment, headless runs, repo overview |
 
-This file is the **single source of truth** for methodology, hyperparameters, and reported metrics. **Row-level metrics:** `Checkpoints/experiment_log.csv` (every logged eval, including E1–E4, T1–T2, LLM, matched subset). **Curated E4 quick view:** `Checkpoints/results_report_table.csv` (subset of zero-shot + source-test rows). **Per-run loss/metric traces:** `Checkpoints/training_log_*.csv`; **rendered plots:** `Phase2_Outputs/*.png`. **Few-shot sweep table:** `Phase2_Outputs/few_shot_results.csv`. **Qualitative errors:** `Phase2_Outputs/zero_shot_error_summary.md` + `Phase2_Outputs/zero_shot_errors_sample.csv`. **Transfer headline:** `Phase3_Outputs/transfer_gap_summary.csv` (derived from `experiment_log.csv` + `few_shot_results.csv`; regenerate after re-running T1/T2 if those rows change).
+**Per-run metrics refresh.** After any notebook run that changes `experiment_log.csv` or `few_shot_results.csv`, regenerate the **derived** tables so they cannot drift:
+
+```bash
+.venv/bin/python scripts/sync_metrics_tables.py
+```
+
+This rewrites `Checkpoints/results_report_table.csv` and `Phase3_Outputs/transfer_gap_summary.csv` from the canonical logs. It does **not** modify `experiment_log.csv` itself.
 
 ---
 
@@ -34,7 +40,16 @@ For **cross-lingual hate-speech classification on Twi and Nigerian Pidgin** with
 | **`Final_Source_Model/tokenizer.json`**, **`tokenizer_config.json`** | Yes | XLM-R tokenizer files |
 | **`Final_Source_Model/training_args.bin`** | Yes | Hugging Face `TrainingArguments` snapshot (optional for inference) |
 
-**Why there is no `.pth` file.** This codebase does **not** save raw `torch.save` checkpoints. Experiment 1 calls Hugging Face `Trainer.save_model(...)` into `Final_Source_Model/`, which writes a **Hugging Face layout**: by default **`model.safetensors`** (or, on older setups, **`pytorch_model.bin`**). Those weight files are **gitignored** and will **not** appear on GitHub; only `config.json` + tokenizer files (+ `training_args.bin`) are committed. If you browse `Final_Source_Model/` after a fresh clone and only see JSON, you still need to **train once** or **copy in** the weight file from someone who ran training.
+**Why there is no `.pth` file in Git.** This codebase does **not** save raw `torch.save` checkpoints during training. Experiment 1 calls Hugging Face `Trainer.save_model(...)` into `Final_Source_Model/`, which writes a **Hugging Face layout**: by default **`model.safetensors`** (or, on older setups, **`pytorch_model.bin`**). Those weight files are **gitignored** and will **not** appear on GitHub; only `config.json` + tokenizer files (+ `training_args.bin`) are committed. If you browse `Final_Source_Model/` after a fresh clone and only see JSON, you still need to **train once** or **copy in** the weight file from someone who ran training.
+
+**Optional `.pth` bundle (local only — do not push the file to normal GitHub).** If your deployment pipeline expects a single PyTorch file, run:
+
+```bash
+.venv/bin/python scripts/export_e4_model_to_pth.py
+# writes Weights_export/e4_best_model.pth (gitignored; ~same size as model.safetensors)
+```
+
+The archive contains `state_dict`, `id2label`, and `label2id`. **GitHub rejects files larger than ~100 MB**; a 76L encoder is **~2 GB**, so a full `.pth` **cannot** be committed to a standard repo. Use **Hugging Face Hub** (`huggingface-cli upload`), **Git LFS** with a paid/large quota, or **shared cloud storage** — not a plain `git push` of the weight file.
 
 After `git clone`, colleagues **must** either (1) run **Experiment 1** with the E4 environment (§9) to recreate `model.safetensors` (or `pytorch_model.bin`), or (2) receive that file via shared drive / Hugging Face Hub / artefact store and place it in `Final_Source_Model/`.
 
@@ -88,12 +103,14 @@ Use this table to locate **every committed file**. Paths are relative to the **r
 | `scripts/compare_encoder_llm_matched_subset.py` | Same 200-example subset: E4 encoder vs LLM; writes `Phase3_Outputs/matched_subset_*` and log rows |
 | `scripts/make_training_curves.py` | Renders loss/metric PNGs from `Checkpoints/training_log_*.csv` into `Phase2_Outputs/` |
 | `scripts/make_error_summary.py` | Builds / refreshes qualitative error markdown |
+| `scripts/sync_metrics_tables.py` | Regenerates `results_report_table.csv` + `transfer_gap_summary.csv` from `experiment_log.csv` + `few_shot_results.csv` |
+| `scripts/export_e4_model_to_pth.py` | Optional: exports `Final_Source_Model` weights to a single **`.pth`** bundle (~same size as `model.safetensors`); output defaults to `Weights_export/` (gitignored) |
 
 ### Metrics and training logs (`Checkpoints/`)
 
 | Path | Description |
 |------|-------------|
-| `Checkpoints/experiment_log.csv` | **Master log**: one row per evaluation (E1–E4 zero-shot + source-test, T1/T2, LLM, matched subset encoder rows) |
+| `Checkpoints/experiment_log.csv` | **Master log**: one row per evaluation (E1–E4 zero-shot + source-test, T1/T2, LLM, matched subset encoder rows). **Updated only when you run notebooks or `compare_encoder_llm_matched_subset.py`** — it is not auto-regenerated by `sync_metrics_tables.py`. |
 | `Checkpoints/results_report_table.csv` | Compact E4-focused extract (subset / n_eval / headline metrics) |
 | `Checkpoints/training_log_history.csv` | Loss + eval metrics per step for **Phase 1 (E4)** source training |
 | `Checkpoints/training_log_T1_supervised_twi.csv` | Training trace for **T1** supervised Twi ceiling |
@@ -146,7 +163,7 @@ Use this table to locate **every committed file**. Paths are relative to the **r
 |---------|-----|
 | `.venv/`, `venv/` | Local Python environment |
 | `data/` | AfriHate cache / downloads (see `README.md`) |
-| `*.safetensors`, `pytorch_model.bin` | Weight files exceed GitHub blob limits |
+| `*.safetensors`, `pytorch_model.bin`, `Weights_export/` | Weight files exceed GitHub blob limits; local `.pth` exports go here |
 | `Phase3_Outputs/runs_*/`, `Checkpoints/checkpoint-*/`, `Phase2_Outputs/fewshot_*/` | Ephemeral training checkpoints from notebooks |
 | `.env` | Secrets (`HF_TOKEN`, `OPENAI_API_KEY`) |
 
@@ -353,6 +370,7 @@ For every fine-tune we save a `Checkpoints/training_log_<id>.csv` and render two
 Re-render any time after training:
 
 ```bash
+.venv/bin/python scripts/sync_metrics_tables.py
 .venv/bin/python scripts/make_training_curves.py
 .venv/bin/python scripts/make_error_summary.py
 .venv/bin/python scripts/compare_encoder_llm_matched_subset.py
