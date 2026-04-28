@@ -147,6 +147,25 @@ The cell supports `NLP_LLM_MODE=zeroshot|fewshot` and `NLP_LLM_MODEL=gpt-4o-mini
 
 **Billing / quota.** If the account has **no credits** or the key is over quota, OpenAI returns **429 `insufficient_quota`**. The notebook then falls back to `Normal` on each failed call, so `experiment_log.csv` can show **`pred_majority_frac = 1.0`** and very low F1 even though the JSON parser is fixed. After a run, check stdout (first few API errors) and the **`notes`** column (`api_errors=…`, `INVALID_METRICS` when ≥90% of calls failed).
 
+### Matched subset: E4 encoder vs LLM on the **same** 200 examples
+
+The LLM cell uses `pandas.sample(N, random_state=42)` on each target's official test split (`N = NLP_LLM_MAX_EXAMPLES`, default 200). Run:
+
+```bash
+.venv/bin/python compare_encoder_llm_matched_subset.py
+```
+
+This writes `Phase3_Outputs/matched_subset_encoder_vs_llm.csv`, saves the exact AfriHate test **row indices** (`matched_subset_indices_twi.json`, `matched_subset_indices_pcm.json`), and appends **`E4_encoder_matchedLLMsubset_{twi,pcm}`** rows to `experiment_log.csv` (`setting=zero_shot_matched_llm_subset`, same `subset` string as the `LLM0_*` rows).
+
+**Latest matched n=200 snapshot (encoder `Final_Source_Model` vs `gpt-4o-mini` zero-shot):**
+
+| Target | Encoder F1-macro | LLM F1-macro | Encoder acc | LLM acc |
+|--------|------------------|--------------|---------------|---------|
+| Twi | **0.444** | 0.336 | **0.585** | 0.400 |
+| Pidgin | 0.556 | **0.592** | 0.595 | **0.635** |
+
+On this slice the **encoder wins Twi**; **`gpt-4o-mini` wins Pidgin** slightly on macro-F1. Full-test E4 metrics remain in the main `E4_large76L_hau_amh_yor` rows.
+
 ---
 
 ## 7. Qualitative error analysis (RQ4)
@@ -229,6 +248,7 @@ export NLP_TARGET_EPOCHS=4 NLP_TARGET_LR=2e-5
 ```bash
 .venv/bin/python make_training_curves.py
 .venv/bin/python make_error_summary.py
+.venv/bin/python compare_encoder_llm_matched_subset.py
 ```
 
 ---

@@ -11,11 +11,12 @@ Multilingual fine-tuning (**Hausa, Amharic**, optional **Yoruba**) and **zero-sh
 | `Source_Model_FineTuning.ipynb` | Phase 1 — source fine-tune + zero-shot evaluation, writes `experiment_log.csv` |
 | `Phase2_FewShot_And_ErrorAnalysis.ipynb` | Phase 2 — k=5/10/20 few-shot adaptation + error sampling |
 | `Phase3_TargetSupervised_LLM_Baseline.ipynb` | Phase 3 — supervised target ceiling (Twi, Pidgin) + optional LLM baseline (skipped without `OPENAI_API_KEY`) |
+| `compare_encoder_llm_matched_subset.py` | **Same 200-row slice** as LLM: scores `Final_Source_Model` + writes `matched_subset_encoder_vs_llm.csv` |
 | `make_training_curves.py` | Renders train/val loss + eval-metric PNGs from any `Checkpoints/training_log_*.csv` |
 | `make_error_summary.py` | Categorises `zero_shot_errors_sample.csv` into `zero_shot_error_summary.md` |
 | `Checkpoints/` | `experiment_log.csv`, `results_report_table.csv`, `training_log_*.csv` |
 | `Phase2_Outputs/` | `few_shot_results.csv`, `few_shot_curve.png`, `zero_shot_error_summary.md`, training-curve PNGs |
-| `Phase3_Outputs/` | `transfer_gap_summary.csv`, per-target confusion matrices |
+| `Phase3_Outputs/` | `transfer_gap_summary.csv`, confusion matrices, `matched_subset_encoder_vs_llm.csv`, index JSONs |
 | `Final_Source_Model/` | Config + tokenizer only on GitHub (see below) |
 | `EXPERIMENTS.md` | Full run matrix, transfer-gap analysis, error patterns, reproduction commands |
 | `execute_notebook.sh` | Headless run with project `.venv` kernel |
@@ -38,6 +39,7 @@ unset NLP_EXPERIMENT_ID NLP_SOURCE_LANGS NLP_MODEL NLP_LR NLP_NUM_EPOCHS
 ./execute_notebook.sh Source_Model_FineTuning.ipynb
 ./execute_notebook.sh Phase2_FewShot_And_ErrorAnalysis.ipynb
 ./execute_notebook.sh Phase3_TargetSupervised_LLM_Baseline.ipynb
+.venv/bin/python compare_encoder_llm_matched_subset.py
 .venv/bin/python make_training_curves.py
 .venv/bin/python make_error_summary.py
 ```
