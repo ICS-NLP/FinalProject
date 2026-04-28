@@ -8,7 +8,7 @@ Multilingual fine-tuning (**Hausa, Amharic**, optional **Yoruba**) and **zero-sh
 
 | Path | Contents |
 |------|----------|
-| [`experiments/`](experiments/) | Phase **01–03** notebooks + short READMEs per phase |
+| [`experiments/`](experiments/) | **Experiment_1–Experiment_3** folders (notebooks + README each) |
 | [`results/best_experiment_e4/`](results/best_experiment_e4/) | **Headline configuration (E4)** — key figures + summary for the report |
 | [`scripts/`](scripts/) | Helper CLIs (`compare_encoder_llm_matched_subset.py`, `make_training_curves.py`, `make_error_summary.py`) |
 | `project_paths.py` | Shared `repo_root()` for scripts |
@@ -17,7 +17,7 @@ Multilingual fine-tuning (**Hausa, Amharic**, optional **Yoruba**) and **zero-sh
 | `Phase3_Outputs/` | Transfer gap, confusion matrices, matched LLM subset artefacts |
 | `Final_Source_Model/` | Best Phase 1 checkpoint (weights are **gitignored**; see below) |
 | [`EXPERIMENTS.md`](EXPERIMENTS.md) | Full experiment matrix, metrics, reproduction commands |
-| `execute_notebook.sh` | Headless notebook execution (default = Phase 1 notebook) |
+| `execute_notebook.sh` | Headless notebook execution (default = Experiment 1 notebook) |
 
 ## Model weights (not stored on GitHub)
 
@@ -35,11 +35,11 @@ python3 -m venv .venv
 # .env with HF_TOKEN …
 unset NLP_EXPERIMENT_ID NLP_SOURCE_LANGS NLP_MODEL NLP_LR NLP_NUM_EPOCHS
 
-# Default: Phase 1 E4-style run (override with env vars — see EXPERIMENTS.md)
+# Default: Experiment 1 (Phase 1) E4-style run (override with env vars — see EXPERIMENTS.md)
 ./execute_notebook.sh
 
-./execute_notebook.sh experiments/02_phase2_fewshot_error_analysis/Phase2_FewShot_And_ErrorAnalysis.ipynb
-./execute_notebook.sh experiments/03_phase3_supervised_ceiling_llm/Phase3_TargetSupervised_LLM_Baseline.ipynb
+./execute_notebook.sh experiments/Experiment_2/Phase2_FewShot_And_ErrorAnalysis.ipynb
+./execute_notebook.sh experiments/Experiment_3/Phase3_TargetSupervised_LLM_Baseline.ipynb
 
 .venv/bin/python scripts/make_training_curves.py
 .venv/bin/python scripts/make_error_summary.py

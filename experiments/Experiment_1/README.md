@@ -1,4 +1,4 @@
-# Phase 1 — Source fine-tuning and zero-shot evaluation
+# Experiment 1 — Phase 1: source fine-tuning and zero-shot evaluation
 
 **Notebook:** `Source_Model_FineTuning.ipynb`
 
@@ -12,5 +12,5 @@ Fine-tunes `Davlan/afro-xlmr-base` or `Davlan/afro-xlmr-large-76L` on AfriHate *
 **Run** (current working directory must be the **repository root** — the folder that contains `execute_notebook.sh` and `requirements.txt`):
 
 ```bash
-./execute_notebook.sh experiments/01_phase1_source_finetuning_zeroshot/Source_Model_FineTuning.ipynb
+./execute_notebook.sh experiments/Experiment_1/Source_Model_FineTuning.ipynb
 ```

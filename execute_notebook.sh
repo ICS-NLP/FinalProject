@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Headless notebook execution using THIS folder's .venv.
 # Usage: ./execute_notebook.sh [notebook.ipynb]
-# Default: Phase 1 notebook under experiments/
+# Default: Experiment_1 (Phase 1) notebook under experiments/
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 PY="${ROOT}/.venv/bin/python"
 KERNEL_NAME="nlp-afrihate-finalproject"
-NOTEBOOK="${1:-${ROOT}/experiments/01_phase1_source_finetuning_zeroshot/Source_Model_FineTuning.ipynb}"
+NOTEBOOK="${1:-${ROOT}/experiments/Experiment_1/Source_Model_FineTuning.ipynb}"
 if [[ "${NOTEBOOK}" != /* ]]; then
   NOTEBOOK="${ROOT}/${NOTEBOOK}"
 fi

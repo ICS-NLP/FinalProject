@@ -1,4 +1,4 @@
-# Phase 2 — Few-shot adaptation and qualitative error analysis
+# Experiment 2 — Phase 2: few-shot adaptation and qualitative error analysis
 
 **Notebook:** `Phase2_FewShot_And_ErrorAnalysis.ipynb`
 
@@ -11,5 +11,5 @@ Loads the Phase 1 checkpoint from `Final_Source_Model/`, runs k ∈ {5, 10, 20} 
 **Run** (shell cwd = repository root):
 
 ```bash
-./execute_notebook.sh experiments/02_phase2_fewshot_error_analysis/Phase2_FewShot_And_ErrorAnalysis.ipynb
+./execute_notebook.sh experiments/Experiment_2/Phase2_FewShot_And_ErrorAnalysis.ipynb
 ```

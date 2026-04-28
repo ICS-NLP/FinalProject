@@ -9,7 +9,7 @@ This folder is a **curated snapshot** for the final report: the configuration we
 | Model | `Davlan/afro-xlmr-large-76L` |
 | Source languages | Hausa, Amharic, Yoruba |
 | Experiment ID | `E4_large76L_hau_amh_yor` |
-| Notebook | `experiments/01_phase1_source_finetuning_zeroshot/Source_Model_FineTuning.ipynb` |
+| Notebook | `experiments/Experiment_1/Source_Model_FineTuning.ipynb` |
 
 ## Headline numbers (official test splits)
 

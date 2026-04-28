@@ -4,7 +4,7 @@
 
 | Location | Purpose |
 |----------|---------|
-| [`experiments/`](experiments/) | **Phase notebooks** (01–03) + per-phase READMEs |
+| [`experiments/`](experiments/) | **Experiment_1–Experiment_3** notebooks + per-folder READMEs |
 | [`results/best_experiment_e4/`](results/best_experiment_e4/) | **Headline E4** figures and a short results summary for the report |
 | `Checkpoints/` | `experiment_log.csv`, `training_log_*.csv` (all phases append here) |
 | `Phase2_Outputs/` | Phase 2 CSVs, plots, error analysis markdown |
@@ -31,9 +31,9 @@ This file is the **single source of truth** for what was run, with what hyperpar
 
 | Phase | Notebook | What it produces |
 |---|---|---|
-| 1 — Source fine-tune & zero-shot | [`experiments/01_phase1_source_finetuning_zeroshot/Source_Model_FineTuning.ipynb`](experiments/01_phase1_source_finetuning_zeroshot/Source_Model_FineTuning.ipynb) | E1–E4 rows, source checkpoint, `training_log_history.csv` |
-| 2 — Few-shot + error analysis | [`experiments/02_phase2_fewshot_error_analysis/Phase2_FewShot_And_ErrorAnalysis.ipynb`](experiments/02_phase2_fewshot_error_analysis/Phase2_FewShot_And_ErrorAnalysis.ipynb) | `few_shot_results.csv`, `few_shot_curve.png`, `zero_shot_errors_sample.csv` |
-| 3 — Target supervised ceiling + (optional) LLM baseline | [`experiments/03_phase3_supervised_ceiling_llm/Phase3_TargetSupervised_LLM_Baseline.ipynb`](experiments/03_phase3_supervised_ceiling_llm/Phase3_TargetSupervised_LLM_Baseline.ipynb) | T1, T2 rows, per-target confusion matrices, `transfer_gap_summary.csv` |
+| 1 — Source fine-tune & zero-shot | [`experiments/Experiment_1/Source_Model_FineTuning.ipynb`](experiments/Experiment_1/Source_Model_FineTuning.ipynb) | E1–E4 rows, source checkpoint, `training_log_history.csv` |
+| 2 — Few-shot + error analysis | [`experiments/Experiment_2/Phase2_FewShot_And_ErrorAnalysis.ipynb`](experiments/Experiment_2/Phase2_FewShot_And_ErrorAnalysis.ipynb) | `few_shot_results.csv`, `few_shot_curve.png`, `zero_shot_errors_sample.csv` |
+| 3 — Target supervised ceiling + (optional) LLM baseline | [`experiments/Experiment_3/Phase3_TargetSupervised_LLM_Baseline.ipynb`](experiments/Experiment_3/Phase3_TargetSupervised_LLM_Baseline.ipynb) | T1, T2 rows, per-target confusion matrices, `transfer_gap_summary.csv` |
 
 ### Predefined experiment IDs (auto-assigned when `NLP_EXPERIMENT_ID` is unset)
 
@@ -96,7 +96,7 @@ The 76L encoder is uniformly the strongest in-distribution learner.
 
 ## 4. Phase 2 — few-shot adaptation (source = E4)
 
-`experiments/02_phase2_fewshot_error_analysis/Phase2_FewShot_And_ErrorAnalysis.ipynb` resumes the best Phase-1 checkpoint (`Final_Source_Model/`, 76L on hau+amh+yor) and fine-tunes on a tiny labeled budget per target. Knobs: `NLP_FEWSHOT_LR=8e-6`, `NLP_FEWSHOT_EPOCHS=6`. Curve: `Phase2_Outputs/few_shot_curve.png`.
+`experiments/Experiment_2/Phase2_FewShot_And_ErrorAnalysis.ipynb` resumes the best Phase-1 checkpoint (`Final_Source_Model/`, 76L on hau+amh+yor) and fine-tunes on a tiny labeled budget per target. Knobs: `NLP_FEWSHOT_LR=8e-6`, `NLP_FEWSHOT_EPOCHS=6`. Curve: `Phase2_Outputs/few_shot_curve.png`.
 
 ### Twi (`698` test rows)
 
@@ -151,7 +151,7 @@ Confusion matrices: `Phase3_Outputs/confusion_T1_supervised_twi.csv`, `Phase3_Ou
 
 ## 6. Optional LLM baseline (prompt-only)
 
-`experiments/03_phase3_supervised_ceiling_llm/Phase3_TargetSupervised_LLM_Baseline.ipynb` ships a cell that — when `OPENAI_API_KEY` is exported — runs a zero-shot or 5-shot prompt baseline against a sampled subset of each target's official test split (`NLP_LLM_MAX_EXAMPLES=200` by default for cost control) and writes `LLM0_<target>_<mode>` rows into `experiment_log.csv`. Without the key the cell prints a clear *skipped* notice so the headless runs stay deterministic.
+`experiments/Experiment_3/Phase3_TargetSupervised_LLM_Baseline.ipynb` ships a cell that — when `OPENAI_API_KEY` is exported — runs a zero-shot or 5-shot prompt baseline against a sampled subset of each target's official test split (`NLP_LLM_MAX_EXAMPLES=200` by default for cost control) and writes `LLM0_<target>_<mode>` rows into `experiment_log.csv`. Without the key the cell prints a clear *skipped* notice so the headless runs stay deterministic.
 
 The LLM is instructed to return **JSON only** (`{"label":"Abuse|Hate|Normal","confidence":…}`) with `response_format={"type":"json_object"}` and `max_tokens=128`, plus a regex fallback if the API rejects JSON mode. That fixes an earlier bug where `max_tokens=4` truncated replies and the parser fell back to a single class for every example. Set `NLP_LLM_DEBUG=1` to print parse failures. Re-running overwrites matching rows in `experiment_log.csv`.
 
@@ -239,13 +239,13 @@ unset NLP_EXPERIMENT_ID NLP_SOURCE_LANGS NLP_MODEL NLP_LR \
 export NLP_MODEL=Davlan/afro-xlmr-large-76L
 export NLP_SOURCE_LANGS=hau,amh,yor
 export NLP_NUM_EPOCHS=4
-./execute_notebook.sh experiments/01_phase1_source_finetuning_zeroshot/Source_Model_FineTuning.ipynb
+./execute_notebook.sh experiments/Experiment_1/Source_Model_FineTuning.ipynb
 ```
 
 ### Phase 2 — few-shot adaptation against the saved E4 checkpoint
 
 ```bash
-./execute_notebook.sh experiments/02_phase2_fewshot_error_analysis/Phase2_FewShot_And_ErrorAnalysis.ipynb
+./execute_notebook.sh experiments/Experiment_2/Phase2_FewShot_And_ErrorAnalysis.ipynb
 ```
 
 ### Phase 3 — supervised ceilings (and optional LLM baseline)
@@ -254,7 +254,7 @@ export NLP_NUM_EPOCHS=4
 export NLP_TARGET_EPOCHS=4 NLP_TARGET_LR=2e-5
 # Optional: export OPENAI_API_KEY=... NLP_LLM_MODEL=gpt-4o-mini NLP_LLM_MODE=zeroshot
 # LLM-only (skip ~1h supervised re-run): export NLP_PHASE3_SKIP_SUPERVISED=1
-./execute_notebook.sh experiments/03_phase3_supervised_ceiling_llm/Phase3_TargetSupervised_LLM_Baseline.ipynb
+./execute_notebook.sh experiments/Experiment_3/Phase3_TargetSupervised_LLM_Baseline.ipynb
 ```
 
 ---

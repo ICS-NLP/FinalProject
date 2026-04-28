@@ -1,4 +1,4 @@
-# Phase 3 — Target supervised ceiling and optional LLM baseline
+# Experiment 3 — Phase 3: target supervised ceiling and optional LLM baseline
 
 **Notebook:** `Phase3_TargetSupervised_LLM_Baseline.ipynb`
 
@@ -13,5 +13,5 @@ Fine-tunes `afro-xlmr-base` **on each target’s own training data** (ceiling), 
 
 ```bash
 export NLP_PHASE3_SKIP_SUPERVISED=1   # optional: LLM-only refresh
-./execute_notebook.sh experiments/03_phase3_supervised_ceiling_llm/Phase3_TargetSupervised_LLM_Baseline.ipynb
+./execute_notebook.sh experiments/Experiment_3/Phase3_TargetSupervised_LLM_Baseline.ipynb
 ```
