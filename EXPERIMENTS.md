@@ -139,7 +139,11 @@ Confusion matrices: `Phase3_Outputs/confusion_T1_supervised_twi.csv`, `Phase3_Ou
 
 ## 6. Optional LLM baseline (prompt-only)
 
-`Phase3_TargetSupervised_LLM_Baseline.ipynb` ships a cell that — when `OPENAI_API_KEY` is exported — runs a zero-shot or 5-shot prompt baseline against a sampled subset of each target's official test split (`NLP_LLM_MAX_EXAMPLES=200` by default for cost control) and writes `LLM0_<target>_<mode>` rows into `experiment_log.csv`. Without the key the cell prints a clear *skipped* notice so the headless runs stay deterministic. The prompt fixes the same three labels as the encoder (`Abuse / Hate / Normal`) and the cell supports `NLP_LLM_MODE=zeroshot|fewshot` and `NLP_LLM_MODEL=gpt-4o-mini|gpt-4o|...`. We did **not** spend on the API for the headless run; the encoder track is the team's deliverable.
+`Phase3_TargetSupervised_LLM_Baseline.ipynb` ships a cell that — when `OPENAI_API_KEY` is exported — runs a zero-shot or 5-shot prompt baseline against a sampled subset of each target's official test split (`NLP_LLM_MAX_EXAMPLES=200` by default for cost control) and writes `LLM0_<target>_<mode>` rows into `experiment_log.csv`. Without the key the cell prints a clear *skipped* notice so the headless runs stay deterministic.
+
+The LLM is instructed to return **JSON only** (`{"label":"Abuse|Hate|Normal","confidence":…}`) with `response_format={"type":"json_object"}` and `max_tokens=128`, plus a regex fallback if the API rejects JSON mode. That fixes an earlier bug where `max_tokens=4` truncated replies and the parser fell back to a single class for every example. Set `NLP_LLM_DEBUG=1` to print parse failures. Re-running overwrites matching rows in `experiment_log.csv`.
+
+The cell supports `NLP_LLM_MODE=zeroshot|fewshot` and `NLP_LLM_MODEL=gpt-4o-mini|gpt-4o|...`.
 
 ---
 
@@ -213,7 +217,8 @@ export NLP_NUM_EPOCHS=4
 
 ```bash
 export NLP_TARGET_EPOCHS=4 NLP_TARGET_LR=2e-5
-# Optional: export OPENAI_API_KEY=sk-... NLP_LLM_MODEL=gpt-4o-mini NLP_LLM_MODE=zeroshot
+# Optional: export OPENAI_API_KEY=... NLP_LLM_MODEL=gpt-4o-mini NLP_LLM_MODE=zeroshot
+# LLM-only (skip ~1h supervised re-run): export NLP_PHASE3_SKIP_SUPERVISED=1
 ./execute_notebook.sh Phase3_TargetSupervised_LLM_Baseline.ipynb
 ```
 
