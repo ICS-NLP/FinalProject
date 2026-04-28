@@ -12,9 +12,11 @@ tmp_eval_out/
 .ipynb_checkpoints/
 
 # GitHub rejects blobs > 100 MB. Full weights: train locally or upload to Hugging Face Hub / use Git LFS.
+# HF Trainer.save_model → model.safetensors (or pytorch_model.bin). We do not use .pth in this repo.
 *.safetensors
 pytorch_model.bin
 model-*.safetensors
+*.pth
 
 # Extra saved checkpoints from ablations (regenerate from notebooks; keeps clone small)
 Final_Source_Model_E2_76L/

@@ -34,7 +34,9 @@ For **cross-lingual hate-speech classification on Twi and Nigerian Pidgin** with
 | **`Final_Source_Model/tokenizer.json`**, **`tokenizer_config.json`** | Yes | XLM-R tokenizer files |
 | **`Final_Source_Model/training_args.bin`** | Yes | Hugging Face `TrainingArguments` snapshot (optional for inference) |
 
-After `git clone`, colleagues **must** either (1) run **Experiment 1** with the E4 environment (§9) to recreate `model.safetensors`, or (2) receive **`model.safetensors`** via shared drive / Hugging Face Hub / artefact store and place it in `Final_Source_Model/`.
+**Why there is no `.pth` file.** This codebase does **not** save raw `torch.save` checkpoints. Experiment 1 calls Hugging Face `Trainer.save_model(...)` into `Final_Source_Model/`, which writes a **Hugging Face layout**: by default **`model.safetensors`** (or, on older setups, **`pytorch_model.bin`**). Those weight files are **gitignored** and will **not** appear on GitHub; only `config.json` + tokenizer files (+ `training_args.bin`) are committed. If you browse `Final_Source_Model/` after a fresh clone and only see JSON, you still need to **train once** or **copy in** the weight file from someone who ran training.
+
+After `git clone`, colleagues **must** either (1) run **Experiment 1** with the E4 environment (§9) to recreate `model.safetensors` (or `pytorch_model.bin`), or (2) receive that file via shared drive / Hugging Face Hub / artefact store and place it in `Final_Source_Model/`.
 
 ### Minimal inference load
 
