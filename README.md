@@ -9,7 +9,7 @@ Multilingual fine-tuning (**Hausa, Amharic**, optional **Yoruba**) and **zero-sh
 | Path | Contents |
 |------|----------|
 | [`experiments/`](experiments/) | **Experiment_1–Experiment_3** folders (notebooks + README each) |
-| [`results/best_experiment_e4/`](results/best_experiment_e4/) | **Headline configuration (E4)** — key figures + summary for the report |
+| [`results/best_experiment_e4/`](results/best_experiment_e4/) | **E4 documentation hub** — README links to the deployable checkpoint and canonical figures/tables (no duplicate PNGs in Git) |
 | [`scripts/`](scripts/) | Helper CLIs (`compare_encoder_llm_matched_subset.py`, `make_training_curves.py`, `make_error_summary.py`) |
 | `project_paths.py` | Shared `repo_root()` for scripts |
 | `Checkpoints/` | `experiment_log.csv`, `training_log_*.csv` (all phases write here) |
@@ -48,4 +48,4 @@ unset NLP_EXPERIMENT_ID NLP_SOURCE_LANGS NLP_MODEL NLP_LR NLP_NUM_EPOCHS
 
 Notebooks call `os.chdir` to the **repo root** on startup, so output paths (`Checkpoints/`, `Phase2_Outputs/`, …) stay stable even though `.ipynb` files live under `experiments/`.
 
-See [`EXPERIMENTS.md`](EXPERIMENTS.md) for experiment IDs (E1–E4, T1–T2, LLM, matched subset), transfer-gap headline, and recommended `NLP_MODEL` / `NLP_SOURCE_LANGS` settings.
+See [`EXPERIMENTS.md`](EXPERIMENTS.md) for the full experiment matrix, transfer-gap headline, paths to every artefact, and **[recommended model for deployment (E4)](EXPERIMENTS.md#recommended-model-for-deployment-e4)** (`Final_Source_Model/` + how to obtain `model.safetensors`).

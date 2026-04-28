@@ -1,18 +1,152 @@
 # Experiment log — AfriHate cross-lingual transfer study
 
+> **Colleagues — start here:** for **every committed path** (notebooks, CSVs, plots, configs), open [**§ Complete artifact index**](#complete-artifact-index-paths-in-this-repo). For **which model to deploy** and **where weights live**, open [**§ Recommended model for deployment (E4)**](#recommended-model-for-deployment-e4).
+
 ## Repository layout (where things live)
 
 | Location | Purpose |
 |----------|---------|
-| [`experiments/`](experiments/) | **Experiment_1–Experiment_3** notebooks + per-folder READMEs |
-| [`results/best_experiment_e4/`](results/best_experiment_e4/) | **Headline E4** figures and a short results summary for the report |
-| `Checkpoints/` | `experiment_log.csv`, `training_log_*.csv` (all phases append here) |
-| `Phase2_Outputs/` | Phase 2 CSVs, plots, error analysis markdown |
-| `Phase3_Outputs/` | Phase 3 transfer gap, confusion matrices, matched LLM subset artefacts |
-| `Final_Source_Model/` | Best Phase 1 checkpoint (weights gitignored) |
+| [`experiments/`](experiments/) | **Experiment_1–Experiment_3** — runnable notebooks + per-folder READMEs |
+| [`results/best_experiment_e4/`](results/best_experiment_e4/) | **E4 documentation hub** (README only); figures and tables are stored once under `Phase2_Outputs/` and `Phase3_Outputs/` |
+| `Checkpoints/` | `experiment_log.csv`, `training_log_*.csv`, `results_report_table.csv` |
+| `Phase2_Outputs/` | Few-shot CSV, training curves (PNG), qualitative error markdown + sample rows |
+| `Phase3_Outputs/` | Transfer gap CSV, confusion matrices, matched LLM subset indices + comparison CSV |
+| `Final_Source_Model/` | **Recommended deployable checkpoint** after E4 training — config + tokenizer in Git; **weights (`model.safetensors`) gitignored** |
 | [`scripts/`](scripts/) | `compare_encoder_llm_matched_subset.py`, `make_training_curves.py`, `make_error_summary.py` |
+| `project_paths.py` | `repo_root()` helper used by scripts |
+| `normalize_notebook_json.py` | Used by `execute_notebook.sh` before `nbconvert` |
+| `requirements.txt`, `execute_notebook.sh`, `README.md` | Environment, headless runs, repo overview |
 
-This file is the **single source of truth** for what was run, with what hyperparameters, and what we measured. Aggregated metrics live in `Checkpoints/experiment_log.csv`; per-run training curves live in `Checkpoints/training_log_*.csv` and rendered PNGs in `Phase2_Outputs/`. The few-shot CSV is `Phase2_Outputs/few_shot_results.csv`, the qualitative error report is `Phase2_Outputs/zero_shot_error_summary.md`, and the transfer-gap CSV is `Phase3_Outputs/transfer_gap_summary.csv`.
+This file is the **single source of truth** for methodology, hyperparameters, and reported metrics. **Row-level metrics:** `Checkpoints/experiment_log.csv` (every logged eval, including E1–E4, T1–T2, LLM, matched subset). **Curated E4 quick view:** `Checkpoints/results_report_table.csv` (subset of zero-shot + source-test rows). **Per-run loss/metric traces:** `Checkpoints/training_log_*.csv`; **rendered plots:** `Phase2_Outputs/*.png`. **Few-shot sweep table:** `Phase2_Outputs/few_shot_results.csv`. **Qualitative errors:** `Phase2_Outputs/zero_shot_error_summary.md` + `Phase2_Outputs/zero_shot_errors_sample.csv`. **Transfer headline:** `Phase3_Outputs/transfer_gap_summary.csv` (derived from `experiment_log.csv` + `few_shot_results.csv`; regenerate after re-running T1/T2 if those rows change).
+
+---
+
+## Recommended model for deployment (E4)
+
+For **cross-lingual hate-speech classification on Twi and Nigerian Pidgin** without target-language fine-tuning, use the **Phase 1 E4** checkpoint: **`Davlan/afro-xlmr-large-76L`** fine-tuned on AfriHate **Hausa + Amharic + Yoruba** (`experiment_id = E4_large76L_hau_amh_yor`). This is the strongest zero-shot configuration in our matrix (see §3).
+
+### Where the weights live on disk
+
+| Path | Tracked in Git? | Role |
+|------|-----------------|------|
+| **`Final_Source_Model/model.safetensors`** | **No** (`.gitignore`; ~2.2 GB) | **Trained weights** — required for inference |
+| **`Final_Source_Model/config.json`** | Yes | Architecture, `id2label` / `label2id` (Abuse=0, Hate=1, Normal=2) |
+| **`Final_Source_Model/tokenizer.json`**, **`tokenizer_config.json`** | Yes | XLM-R tokenizer files |
+| **`Final_Source_Model/training_args.bin`** | Yes | Hugging Face `TrainingArguments` snapshot (optional for inference) |
+
+After `git clone`, colleagues **must** either (1) run **Experiment 1** with the E4 environment (§9) to recreate `model.safetensors`, or (2) receive **`model.safetensors`** via shared drive / Hugging Face Hub / artefact store and place it in `Final_Source_Model/`.
+
+### Minimal inference load
+
+```python
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+repo_root = "/path/to/FinalProject"  # directory that contains Final_Source_Model/
+model = AutoModelForSequenceClassification.from_pretrained(f"{repo_root}/Final_Source_Model")
+tokenizer = AutoTokenizer.from_pretrained(f"{repo_root}/Final_Source_Model")
+# inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
+# logits = model(**inputs).logits
+```
+
+Use **`AutoModelForSequenceClassification`** — the head is 3-class AfriHate (`config.json` lists `Abuse`, `Hate`, `Normal`).
+
+### What **not** to ship as the “main” product
+
+| Path / ID | Reason |
+|-----------|--------|
+| **`T1_supervised_twi`**, **`T2_supervised_pcm`** checkpoints under `Phase3_Outputs/runs_*` (local only, gitignored) | **Ceiling / diagnostic** runs on a **single** target language with `afro-xlmr-base`; Twi supervised collapsed to **2 predicted classes** (see §5). They are **not** the cross-lingual model and are not stored in Git. |
+| **LLM rows** (`LLM0_*`) | Prompt-only baseline on a **200-example** slice for cost control — not a single encoder artefact. |
+
+---
+
+## Complete artifact index (paths in this repo)
+
+Use this table to locate **every committed file**. Paths are relative to the **repository root** (`FinalProject/`).
+
+### Notebooks and experiment docs
+
+| Path | Description |
+|------|-------------|
+| `experiments/README.md` | Index of Experiment_1 / 2 / 3 |
+| `experiments/Experiment_1/Source_Model_FineTuning.ipynb` | Source fine-tune + zero-shot (E1–E4) |
+| `experiments/Experiment_1/README.md` | Short Phase 1 description + run command |
+| `experiments/Experiment_2/Phase2_FewShot_And_ErrorAnalysis.ipynb` | Few-shot + error sampling |
+| `experiments/Experiment_2/README.md` | Phase 2 description + run command |
+| `experiments/Experiment_3/Phase3_TargetSupervised_LLM_Baseline.ipynb` | Supervised ceilings T1/T2 + optional LLM |
+| `experiments/Experiment_3/README.md` | Phase 3 description + run command |
+
+### Automation and dependencies
+
+| Path | Description |
+|------|-------------|
+| `execute_notebook.sh` | Headless `jupyter nbconvert --execute` using `.venv` (default notebook = Experiment 1) |
+| `normalize_notebook_json.py` | Normalizes notebook JSON before execution |
+| `requirements.txt` | Python dependencies |
+| `project_paths.py` | `repo_root()` for scripts |
+| `scripts/compare_encoder_llm_matched_subset.py` | Same 200-example subset: E4 encoder vs LLM; writes `Phase3_Outputs/matched_subset_*` and log rows |
+| `scripts/make_training_curves.py` | Renders loss/metric PNGs from `Checkpoints/training_log_*.csv` into `Phase2_Outputs/` |
+| `scripts/make_error_summary.py` | Builds / refreshes qualitative error markdown |
+
+### Metrics and training logs (`Checkpoints/`)
+
+| Path | Description |
+|------|-------------|
+| `Checkpoints/experiment_log.csv` | **Master log**: one row per evaluation (E1–E4 zero-shot + source-test, T1/T2, LLM, matched subset encoder rows) |
+| `Checkpoints/results_report_table.csv` | Compact E4-focused extract (subset / n_eval / headline metrics) |
+| `Checkpoints/training_log_history.csv` | Loss + eval metrics per step for **Phase 1 (E4)** source training |
+| `Checkpoints/training_log_T1_supervised_twi.csv` | Training trace for **T1** supervised Twi ceiling |
+| `Checkpoints/training_log_T2_supervised_pcm.csv` | Training trace for **T2** supervised Pidgin ceiling |
+
+### Phase 2 outputs (plots, few-shot, errors)
+
+| Path | Description |
+|------|-------------|
+| `Phase2_Outputs/few_shot_results.csv` | Zero-shot + k ∈ {5,10,20} few-shot metrics per target |
+| `Phase2_Outputs/few_shot_curve.png` | Plot of few-shot sweep |
+| `Phase2_Outputs/training_log_history_loss.png` | Phase 1 train/val loss |
+| `Phase2_Outputs/training_log_history_metrics.png` | Phase 1 eval F1 etc. |
+| `Phase2_Outputs/training_log_T1_supervised_twi_loss.png` | T1 loss curve |
+| `Phase2_Outputs/training_log_T1_supervised_twi_metrics.png` | T1 metric curve |
+| `Phase2_Outputs/training_log_T2_supervised_pcm_loss.png` | T2 loss curve |
+| `Phase2_Outputs/training_log_T2_supervised_pcm_metrics.png` | T2 metric curve |
+| `Phase2_Outputs/zero_shot_error_summary.md` | Categorised qualitative error analysis (RQ4) |
+| `Phase2_Outputs/zero_shot_errors_sample.csv` | Sampled rows backing the error discussion |
+
+### Phase 3 outputs (transfer gap, confusion, LLM comparison)
+
+| Path | Description |
+|------|-------------|
+| `Phase3_Outputs/transfer_gap_summary.csv` | Zero-shot vs few-shot k=20 vs supervised macro-F1; gap, transfer ratio, % gap recovered |
+| `Phase3_Outputs/confusion_T1_supervised_twi.csv` | Confusion matrix counts — **T1** official test |
+| `Phase3_Outputs/confusion_T2_supervised_pcm.csv` | Confusion matrix counts — **T2** official test |
+| `Phase3_Outputs/matched_subset_encoder_vs_llm.csv` | Encoder vs LLM on identical 200-example slices |
+| `Phase3_Outputs/matched_subset_indices_twi.json` | Test indices used for Twi matched eval (seed aligned with LLM cell) |
+| `Phase3_Outputs/matched_subset_indices_pcm.json` | Same for Pidgin |
+
+### Recommended model config (no weights in Git)
+
+| Path | Description |
+|------|-------------|
+| `Final_Source_Model/config.json` | 3-class XLM-R-large head; label map |
+| `Final_Source_Model/tokenizer.json` | SentencePiece tokenizer data |
+| `Final_Source_Model/tokenizer_config.json` | Tokenizer settings |
+| `Final_Source_Model/training_args.bin` | Serialized `TrainingArguments` |
+
+### Report pointer (no duplicate binaries)
+
+| Path | Description |
+|------|-------------|
+| `results/best_experiment_e4/README.md` | Points to E4 config, **`Final_Source_Model/`**, and canonical figure/table paths above |
+
+### Not in Git (clone / run behaviour)
+
+| Pattern | Why |
+|---------|-----|
+| `.venv/`, `venv/` | Local Python environment |
+| `data/` | AfriHate cache / downloads (see `README.md`) |
+| `*.safetensors`, `pytorch_model.bin` | Weight files exceed GitHub blob limits |
+| `Phase3_Outputs/runs_*/`, `Checkpoints/checkpoint-*/`, `Phase2_Outputs/fewshot_*/` | Ephemeral training checkpoints from notebooks |
+| `.env` | Secrets (`HF_TOKEN`, `OPENAI_API_KEY`) |
 
 ---
 
@@ -130,22 +264,26 @@ We fine-tune a **fresh** `afro-xlmr-base` on each target's *own* AfriHate train 
 
 | ID | Subset | Acc | Bal-Acc | F1-macro | Precision-macro | Recall-macro | MCC | #classes used |
 |---|---|---|---|---|---|---|---|---|
-| T1 supervised twi | twi (official test) | 0.751 | 0.488 | **0.452** | 0.422 | 0.488 | 0.383 | **2** |
-| T2 supervised pcm | pcm (official test) | 0.685 | 0.661 | **0.655** | 0.650 | 0.661 | 0.468 | 3 |
+| T1 supervised twi | twi (official test) | 0.729 | 0.435 | **0.414** | 0.405 | 0.435 | 0.285 | **2** |
+| T2 supervised pcm | pcm (official test) | 0.688 | 0.666 | **0.661** | 0.656 | 0.666 | 0.472 | 3 |
 
 Confusion matrices: `Phase3_Outputs/confusion_T1_supervised_twi.csv`, `Phase3_Outputs/confusion_T2_supervised_pcm.csv`. Loss / metric curves: `Phase2_Outputs/training_log_T1_supervised_twi_loss.png`, `…_metrics.png`, and the same pair for T2.
 
+*Numbers above match the `T1_supervised_twi` and `T2_supervised_pcm` rows in `Checkpoints/experiment_log.csv` (official test splits).*
+
 ### Transfer gap
+
+`Phase3_Outputs/transfer_gap_summary.csv` is a **derived** table: zero-shot and few-shot k=20 macro-F1 values come from `Phase2_Outputs/few_shot_results.csv`; supervised macro-F1 comes from the T1/T2 rows in `experiment_log.csv`. If you re-run Phase 3, update `transfer_gap_summary.csv` so it stays consistent (same formulas as in the CSV header).
 
 | Target | Zero-shot F1 (E4) | Few-shot k=20 F1 | Supervised F1 | Absolute gap (sup − ZS) | Transfer ratio (ZS / sup) | Few-shot recovers |
 |---|---|---|---|---|---|---|
-| twi | 0.375 | 0.380 | 0.452 | **+0.077** | **0.83** | 5.7% of the gap |
-| pcm | 0.584 | 0.593 | 0.655 | **+0.071** | **0.89** | 11.7% of the gap |
+| twi | 0.375 | 0.380 | 0.414 | **+0.038** | **0.91** | **11.5%** of the gap |
+| pcm | 0.584 | 0.593 | 0.661 | **+0.076** | **0.88** | **10.9%** of the gap |
 
 **Phase 3 takeaways.**
-- **Cross-lingual zero-shot from Hau+Amh+Yor recovers ~91% of the Twi supervised ceiling and ~88% of the Pidgin ceiling** (ratio = zero-shot F1 / supervised F1 in `Phase3_Outputs/transfer_gap_summary.csv`). That answers RQ3 directly and gives the report a single defensible "transfer gap" headline.
-- The **Twi supervised baseline collapses on the `Normal` class** (`num_pred_classes_used = 2`): Twi's training distribution is dominated by `Abuse`, so vanilla cross-entropy fine-tuning never learns to predict `Normal`. This is itself a finding — the AfriHate Twi split is class-imbalanced enough that *direct* supervised fine-tuning on a small target set can be worse on macro-F1 than transfer from a balanced multi-language source. Phase-1 zero-shot recovers `Normal` because Hausa/Amharic/Yoruba contribute many `Normal` examples.
-- The **Pidgin supervised baseline** uses all three classes and produces a clean ceiling around macro-F1 = 0.66.
+- **Cross-lingual zero-shot from Hau+Amh+Yor recovers about 91% of the Twi supervised macro-F1 ceiling and about 88% of the Pidgin ceiling** (ratio = zero-shot F1 / supervised F1 in `Phase3_Outputs/transfer_gap_summary.csv`). That answers RQ3 and gives the report a single defensible "transfer gap" headline.
+- The **Twi supervised baseline collapses on the `Normal` class** (`num_pred_classes_used = 2`): Twi's training distribution is dominated by `Abuse`, so vanilla cross-entropy fine-tuning rarely predicts `Normal` even though overall macro-F1 exceeds E4 zero-shot. This is a **deployment-relevant** contrast to the E4 encoder, which uses **all three** labels on the test set.
+- The **Pidgin supervised baseline** uses all three classes and produces a clean ceiling around macro-F1 ≈ 0.66.
 
 ---
 
