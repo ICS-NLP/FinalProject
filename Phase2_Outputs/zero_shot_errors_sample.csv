@@ -1,0 +1,33 @@
+target,error_type,true_label,pred_label,text
+twi,false_positive,Normal,Abuse,My Manager ye brofo no one one like tugyimi rice. 🔥🔥😍
+twi,false_positive,Normal,Abuse,Herhh Kwabena wo ha twa s3 abokyi sekan!🔥
+twi,false_positive,Normal,Abuse,Wei de3 Dagaate Poloo ankasa
+twi,false_positive,Normal,Hate,Americans are the real frafrafo)
+twi,false_positive,Normal,Abuse,Ah the abokyi people go demma hometown or? Cos I haven’t seen 1 in almost a week.
+twi,false_positive,Normal,Hate,Anka )b3ti Zongofo) no nka
+twi,false_positive,Normal,Hate,"Wo Kɔ Alatafuo Traditional Marriage, na wo hunu sɛ Wornom de Nsa no egu Bath No mu"
+twi,false_positive,Normal,Abuse,"Afihyia pa ooh, afi sesei na w'awo ntafo."
+twi,false_negative,Abuse,Normal,"Saa pɛpɛɛpɛ. Nyankopon nti, Kontomponi bɛ ferɛ saaa🙏🏾 "
+twi,false_negative,Abuse,Normal,Ah na severed vagina deɛ bosom de yɛ dɛn? Gyimisɛm kwa!
+twi,false_negative,Abuse,Normal,"Wooooow!! Ma y3 kurasini aky33 ""@degalalinco: Did u know dis??😂😂😂 """
+twi,false_negative,Abuse,Normal,"Omo ho nny3 F3 nso oo, ahwene3 pa nkasa ampah"
+twi,false_negative,Abuse,Normal,na s3 mode3 gyimie noaaa Fri tete
+twi,false_negative,Abuse,Normal,"Saa man no, n'anum kasa nyɛ dɛ"
+twi,false_negative,Abuse,Normal,Kwasia you don't have money so you see taking care of 1 person us big favour Jon
+twi,false_negative,Abuse,Normal,"🤣🤣🤣🤣🤣🤣akoa wei yɛ jon, adɛn Manhyia no ɛyɛ orphanage home.and feel sorry for your people cos amo yɛ mmɔbɔ,so called land owners have nothing on their own land.ɛnyɛ gyimisɛm"
+pcm,false_positive,Normal,Abuse,patronising alternativemedicine vendors dey cum around on saturdays stay d bstop and stat blastin ru deir loudspeakers about d various cures dey ave esp stds and stis den my dad wud b lyk go an buy agbo jedi me rm dose pple kuku kil me na
+pcm,false_positive,Normal,Abuse,fine boys like us we nor too dey chase women na dem dey rush us chevron gbagada
+pcm,false_positive,Normal,Abuse,"@USER @USER So what exactly was d intent if not to cause reputational damage?Cooked up a totally false story&amp;attached someones name to it but then you ""did not intend to bring taooma's reputation into any form of disrepute""!Until smbody pays heavily for these types of nonsense it wont stop"
+pcm,false_positive,Normal,Abuse,lmao you bin dey tell me small small but na you worse pass
+pcm,false_positive,Normal,Abuse,you wey na work to stand up from bed wan dance lol
+pcm,false_positive,Normal,Abuse,no now daboski woman wey sabi no be like dis we plan am o who will give abimbola heat now who will trouble terfas soul this is not fair who will take timothy and justice atinuke for a ride who
+pcm,false_positive,Normal,Abuse,if na this oscar award winning actor now i will understand na person way no fit navigate elevator dem dey do like this
+pcm,false_positive,Normal,Abuse,onyi youre not getting me i mean my comment was a joke but nah none of them will cry for man sha abeg i dey laugh for here before they think im cray
+pcm,false_negative,Abuse,Normal,@USER Another reason not to bring a hoe to a sword fight
+pcm,false_negative,Hate,Normal,"Then I think u should meet d hausas""@USER: Have u met d ebiras""@USER: Yoruba people too Like noise tah"""""
+pcm,false_negative,Hate,Normal,"I agree""@USER: Facts: 50% of Whores in Nigeria are Igbo's."""""
+pcm,false_negative,Abuse,Normal,kill em wit d sauce kill em wit d success kill em wit d smile kill em wit d noise kill em wit d joy the key is dat u r happy we want school bt dey gave us prison we want education by dey taught us lesson
+pcm,false_negative,Abuse,Normal,na catfish i do i no kill person saratu
+pcm,false_negative,Abuse,Normal,may the good lord touch the heart of your debtors this week amen i have over out there and i dey see all of my debtors dey flex well i kuku no get mama or papa so i leave them to god to judge na me wey mumu dey loan like central bank it will not happen again
+pcm,false_negative,Abuse,Normal,e be like all these coaches don dey mad wtf is wrong with tuchel wtf is chupo motim wheres icardi if only these guys are aware how much ive lost to betja
+pcm,false_negative,Abuse,Normal,yansh be trending all of a sudden as i no kon get yansh laidis wetin i go do

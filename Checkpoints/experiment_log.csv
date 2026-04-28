@@ -1,0 +1,13 @@
+experiment_id,model,source_languages,num_epochs,learning_rate,setting,subset,n_eval,accuracy,balanced_accuracy,mcc,f1_macro,f1_weighted,pred_majority_frac,num_pred_classes_used,notes
+E1_base_hau_amh,Davlan/afro-xlmr-base,hau+amh,3,2e-05,zero_shot,twi,698,0.36963,0.38564,0.08438,0.28716,0.39733,0.62034,3.0,
+E1_base_hau_amh,Davlan/afro-xlmr-base,hau+amh,3,2e-05,zero_shot,pcm,1593,0.55869,0.55039,0.32492,0.51901,0.52271,0.6968,3.0,
+E1_base_hau_amh,Davlan/afro-xlmr-base,hau+amh,3,2e-05,source_test_in_distribution,hau+amh (official test),1796,0.76503,0.75576,0.63492,0.75808,0.76432,0.46381,3.0,
+E2_large76L_hau_amh,Davlan/afro-xlmr-large-76L,hau+amh,3,2e-05,zero_shot,twi,698,0.33095,0.40757,0.09477,0.27879,0.34276,0.67765,3.0,
+E2_large76L_hau_amh,Davlan/afro-xlmr-large-76L,hau+amh,3,2e-05,zero_shot,pcm,1593,0.58883,0.60347,0.38205,0.55726,0.55657,0.65788,3.0,
+E2_large76L_hau_amh,Davlan/afro-xlmr-large-76L,hau+amh,3,2e-05,source_test_in_distribution,hau+amh (official test),1796,0.77506,0.76339,0.65025,0.76643,0.77413,0.46938,3.0,
+E3_base_hau_amh_yor,Davlan/afro-xlmr-base,hau+amh+yor,3,2e-05,zero_shot,twi,698,0.5386819484240688,0.4407219921255816,0.1660100197210417,0.3737934651628169,0.5487666322333127,0.5530085959885387,3.0,
+E3_base_hau_amh_yor,Davlan/afro-xlmr-base,hau+amh+yor,3,2e-05,zero_shot,pcm,1593,0.5655994978028877,0.5297085600100221,0.3093455785066319,0.5151898286163804,0.5386713015130304,0.6641556811048337,3.0,
+E3_base_hau_amh_yor,Davlan/afro-xlmr-base,hau+amh+yor,3,2e-05,source_test_in_distribution,hau+amh+yor (official test),2615,0.7552581261950286,0.7277576562687716,0.6152193152134682,0.7366957141393232,0.7523961086088201,0.4665391969407266,3.0,
+E4_large76L_hau_amh_yor,Davlan/afro-xlmr-large-76L,hau+amh+yor,4,2e-05,zero_shot,twi,698,0.5272206303724928,0.4020826302602649,0.0934479629629184,0.375106198867212,0.5436164033352507,0.5959885386819485,3.0,
+E4_large76L_hau_amh_yor,Davlan/afro-xlmr-large-76L,hau+amh+yor,4,2e-05,zero_shot,pcm,1593,0.608286252354049,0.6201238926300383,0.3833686814068321,0.5844525900762515,0.5936452350424579,0.5649717514124294,3.0,
+E4_large76L_hau_amh_yor,Davlan/afro-xlmr-large-76L,hau+amh+yor,4,2e-05,source_test_in_distribution,hau+amh+yor (official test),2615,0.7709369024856596,0.7462293776547466,0.6408893612535076,0.7526838349132393,0.7689379300357552,0.4367112810707457,3.0,

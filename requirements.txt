@@ -6,3 +6,5 @@ pandas
 accelerate
 huggingface_hub
 python-dotenv
+jupyter
+matplotlib

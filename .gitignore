@@ -1,4 +1,17 @@
 venv/
+.venv/
 __pycache__/
 data/
 .env
+Checkpoints/checkpoint-*/
+Phase2_Outputs/fewshot_*/
+.ipynb_checkpoints/
+
+# GitHub rejects blobs > 100 MB. Full weights: train locally or upload to Hugging Face Hub / use Git LFS.
+*.safetensors
+pytorch_model.bin
+model-*.safetensors
+
+# Extra saved checkpoints from ablations (regenerate from notebooks; keeps clone small)
+Final_Source_Model_E2_76L/
+Final_Source_Model_E3_base_yor/
