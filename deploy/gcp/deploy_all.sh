@@ -8,7 +8,7 @@
 #   - Billing linked to the target project (Console → Billing → link account); required for Run/Build/Artifact Registry
 #   - From repo root, trained weights exist:
 #       Final_Source_Model/model.safetensors (or pytorch_model.bin)
-#       Phase2_Outputs/fewshot_twi_5/  and  fewshot_pcm_5/  (after Experiment 2)
+#       Phase2_Outputs/fewshot_twi_5/  and  fewshot_pcm_5/  (after Experiment 2; optional — see --e4-only)
 #
 # Usage (defaults match your course project):
 #   ./deploy/gcp/deploy_all.sh
@@ -23,6 +23,8 @@
 # Flags:
 #   --skip-upload   Skip gsutil rsync (weights already in GCS at expected prefixes)
 #   --skip-build    Skip Cloud Build (image already in Artifact Registry)
+#   --e4-only       Only upload + deploy E4 (skip few-shot even if folders exist)
+#   --require-fewshot  Exit with error if few-shot folders are missing (default is to skip them)
 #   --help          Show this help
 
 set -euo pipefail
@@ -33,12 +35,14 @@ cd "${REPO_ROOT}"
 
 SKIP_UPLOAD=0
 SKIP_BUILD=0
+E4_ONLY=0
+REQUIRE_FEWSHOT=0
 
 usage() {
   cat <<'EOF'
-Usage: ./deploy/gcp/deploy_all.sh [--skip-upload] [--skip-build]
+Usage: ./deploy/gcp/deploy_all.sh [options]
 
-  One-shot: upload weights → Cloud Build → IAM → 3× Cloud Run (E4 + few-shot Twi/Pidgin k=5).
+  Upload weights → Cloud Build → IAM → Cloud Run (E4 + optional few-shot Twi/Pidgin k=5).
 
   Before running:
     gcloud auth login
@@ -52,8 +56,11 @@ Usage: ./deploy/gcp/deploy_all.sh [--skip-upload] [--skip-build]
     IMAGE_TAG        (default: latest)
 
   Flags:
-    --skip-upload   Weights already under gs://BUCKET/models/{e4,fewshot_*}
-    --skip-build    Reuse existing image in Artifact Registry
+    --skip-upload      Weights already under gs://BUCKET/models/{e4,fewshot_*}
+    --skip-build       Reuse existing image in Artifact Registry
+    --e4-only          Only E4 zero-shot (no few-shot upload or services)
+    --require-fewshot  Fail if Phase2 few-shot folders are missing (default: skip few-shot)
+    -h, --help         This help
 EOF
 }
 
@@ -61,6 +68,8 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --skip-upload) SKIP_UPLOAD=1 ;;
     --skip-build) SKIP_BUILD=1 ;;
+    --e4-only) E4_ONLY=1 ;;
+    --require-fewshot) REQUIRE_FEWSHOT=1 ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown option: $1" >&2; usage; exit 2 ;;
   esac
@@ -81,6 +90,8 @@ echo "==> Bucket:        ${BUCKET}"
 echo "==> Image:         ${IMAGE}"
 echo "==> Skip upload:   ${SKIP_UPLOAD}"
 echo "==> Skip build:    ${SKIP_BUILD}"
+echo "==> E4 only:       ${E4_ONLY}"
+echo "==> Require few-shot: ${REQUIRE_FEWSHOT}"
 echo
 
 if ! command -v gcloud >/dev/null 2>&1; then
@@ -152,6 +163,35 @@ if ! gcloud storage buckets describe "gs://${BUCKET}/" --project="${PROJECT_ID}"
   gcloud storage buckets create "gs://${BUCKET}/" --project="${PROJECT_ID}" --location="${REGION}" --uniform-bucket-level-access
 fi
 
+fewshot_ok() {
+  local name="$1"
+  local d="${REPO_ROOT}/Phase2_Outputs/${name}"
+  [[ -d "${d}" && -f "${d}/config.json" ]]
+}
+
+if [[ "${E4_ONLY}" -eq 1 ]]; then
+  DEPLOY_FEWSHOT_TWI=0
+  DEPLOY_FEWSHOT_PCM=0
+else
+  DEPLOY_FEWSHOT_TWI=0
+  DEPLOY_FEWSHOT_PCM=0
+  fewshot_ok fewshot_twi_5 && DEPLOY_FEWSHOT_TWI=1
+  fewshot_ok fewshot_pcm_5 && DEPLOY_FEWSHOT_PCM=1
+  if [[ "${DEPLOY_FEWSHOT_TWI}" -eq 0 || "${DEPLOY_FEWSHOT_PCM}" -eq 0 ]]; then
+    if [[ "${REQUIRE_FEWSHOT}" -eq 1 ]]; then
+      echo "ERROR: --require-fewshot set but missing one or both of:" >&2
+      echo "  ${REPO_ROOT}/Phase2_Outputs/fewshot_twi_5/  (config.json)" >&2
+      echo "  ${REPO_ROOT}/Phase2_Outputs/fewshot_pcm_5/" >&2
+      echo "Run experiments/Experiment_2/Phase2_FewShot_And_ErrorAnalysis.ipynb first." >&2
+      exit 1
+    fi
+    echo "==> NOTE: Few-shot adapter folder(s) missing — deploying E4 only for missing side(s)."
+    [[ "${DEPLOY_FEWSHOT_TWI}" -eq 0 ]] && echo "    (skip) fewshot_twi_5 — run Experiment 2 to create Phase2_Outputs/fewshot_twi_5/"
+    [[ "${DEPLOY_FEWSHOT_PCM}" -eq 0 ]] && echo "    (skip) fewshot_pcm_5 — run Experiment 2 to create Phase2_Outputs/fewshot_pcm_5/"
+    echo "    Re-run this script after Experiment 2 to deploy the skipped few-shot Cloud Run services."
+  fi
+fi
+
 if [[ "${SKIP_UPLOAD}" -eq 0 ]]; then
   E4="${REPO_ROOT}/Final_Source_Model"
   if [[ ! -f "${E4}/config.json" ]]; then
@@ -162,20 +202,17 @@ if [[ "${SKIP_UPLOAD}" -eq 0 ]]; then
     echo "Missing weights under ${E4}/ (model.safetensors or pytorch_model.bin). Train Experiment 1 first." >&2
     exit 1
   fi
-  for fs in fewshot_twi_5 fewshot_pcm_5; do
-    d="${REPO_ROOT}/Phase2_Outputs/${fs}"
-    if [[ ! -d "${d}" || ! -f "${d}/config.json" ]]; then
-      echo "Missing few-shot folder ${d} (run Experiment 2 first)." >&2
-      exit 1
-    fi
-  done
 
   echo "==> Upload E4 weights → gs://${BUCKET}/models/e4/"
   gcloud storage rsync --recursive "${E4}/" "gs://${BUCKET}/models/e4/"
-  echo "==> Upload few-shot Twi k=5"
-  gcloud storage rsync --recursive "${REPO_ROOT}/Phase2_Outputs/fewshot_twi_5/" "gs://${BUCKET}/models/fewshot_twi_5/"
-  echo "==> Upload few-shot Pidgin k=5"
-  gcloud storage rsync --recursive "${REPO_ROOT}/Phase2_Outputs/fewshot_pcm_5/" "gs://${BUCKET}/models/fewshot_pcm_5/"
+  if [[ "${DEPLOY_FEWSHOT_TWI}" -eq 1 ]]; then
+    echo "==> Upload few-shot Twi k=5"
+    gcloud storage rsync --recursive "${REPO_ROOT}/Phase2_Outputs/fewshot_twi_5/" "gs://${BUCKET}/models/fewshot_twi_5/"
+  fi
+  if [[ "${DEPLOY_FEWSHOT_PCM}" -eq 1 ]]; then
+    echo "==> Upload few-shot Pidgin k=5"
+    gcloud storage rsync --recursive "${REPO_ROOT}/Phase2_Outputs/fewshot_pcm_5/" "gs://${BUCKET}/models/fewshot_pcm_5/"
+  fi
 else
   echo "==> Skipping upload (--skip-upload)"
 fi
@@ -223,12 +260,20 @@ run_deploy() {
 }
 
 run_deploy "afrihate-e4-zero" "gs://${BUCKET}/models/e4" "e4_zero"
-run_deploy "afrihate-fewshot-twi-5" "gs://${BUCKET}/models/fewshot_twi_5" "fewshot_twi_5"
-run_deploy "afrihate-fewshot-pcm-5" "gs://${BUCKET}/models/fewshot_pcm_5" "fewshot_pcm_5"
+if [[ "${DEPLOY_FEWSHOT_TWI}" -eq 1 ]]; then
+  run_deploy "afrihate-fewshot-twi-5" "gs://${BUCKET}/models/fewshot_twi_5" "fewshot_twi_5"
+fi
+if [[ "${DEPLOY_FEWSHOT_PCM}" -eq 1 ]]; then
+  run_deploy "afrihate-fewshot-pcm-5" "gs://${BUCKET}/models/fewshot_pcm_5" "fewshot_pcm_5"
+fi
+
+DEPLOYED_SERVICES=(afrihate-e4-zero)
+[[ "${DEPLOY_FEWSHOT_TWI}" -eq 1 ]] && DEPLOYED_SERVICES+=(afrihate-fewshot-twi-5)
+[[ "${DEPLOY_FEWSHOT_PCM}" -eq 1 ]] && DEPLOYED_SERVICES+=(afrihate-fewshot-pcm-5)
 
 echo
 echo "==> Done. Service URLs:"
-for svc in afrihate-e4-zero afrihate-fewshot-twi-5 afrihate-fewshot-pcm-5; do
+for svc in "${DEPLOYED_SERVICES[@]}"; do
   url="$(gcloud run services describe "${svc}" --region="${REGION}" --project="${PROJECT_ID}" --format='value(status.url)' 2>/dev/null || true)"
   echo "    ${svc}: ${url}"
 done

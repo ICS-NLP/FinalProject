@@ -26,13 +26,15 @@ gcloud auth application-default login
 ./deploy/gcp/deploy_all.sh
 ```
 
-This script: enables APIs, creates Artifact Registry + bucket (if missing), **rsync**s `Final_Source_Model/` and `Phase2_Outputs/fewshot_{twi,pcm}_5/` to GCS, runs **Cloud Build** from `deploy/gcp/cloudbuild.yaml`, grants IAM, and deploys **three** Cloud Run services.
+This script: enables APIs, creates Artifact Registry + bucket (if missing), **rsync**s `Final_Source_Model/` and (if present) `Phase2_Outputs/fewshot_{twi,pcm}_5/` to GCS, runs **Cloud Build**, grants IAM, and deploys Cloud Run (**E4 always**; **few-shot services only if those folders exist**). Use **`--e4-only`** to skip few-shot even when folders exist. Use **`--require-fewshot`** to fail fast if few-shot folders are missing.
 
 Options:
 
 ```bash
 ./deploy/gcp/deploy_all.sh --skip-upload   # weights already in GCS
 ./deploy/gcp/deploy_all.sh --skip-build    # image already pushed; only (re)deploy Run
+./deploy/gcp/deploy_all.sh --e4-only       # only E4 service (no few-shot)
+./deploy/gcp/deploy_all.sh --require-fewshot  # error if few-shot folders missing
 ./deploy/gcp/deploy_all.sh --help
 ```
 
