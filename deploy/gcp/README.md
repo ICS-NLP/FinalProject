@@ -16,6 +16,30 @@ Use **k=5** few-shot adapters because your results showed the clearest Pidgin ga
 
 ---
 
+## Automated one-shot deploy (recommended)
+
+From **repository root** (`FinalProject/`), after weights and few-shot folders exist:
+
+```bash
+gcloud auth login
+gcloud auth application-default login
+./deploy/gcp/deploy_all.sh
+```
+
+This script: enables APIs, creates Artifact Registry + bucket (if missing), **rsync**s `Final_Source_Model/` and `Phase2_Outputs/fewshot_{twi,pcm}_5/` to GCS, runs **Cloud Build** from `deploy/gcp/cloudbuild.yaml`, grants IAM, and deploys **three** Cloud Run services.
+
+Options:
+
+```bash
+./deploy/gcp/deploy_all.sh --skip-upload   # weights already in GCS
+./deploy/gcp/deploy_all.sh --skip-build    # image already pushed; only (re)deploy Run
+./deploy/gcp/deploy_all.sh --help
+```
+
+Override defaults with env vars, e.g. `GCS_MODEL_BUCKET=my-unique-bucket-name`.
+
+---
+
 ## 0. One-time: APIs, Artifact Registry, bucket
 
 ```bash

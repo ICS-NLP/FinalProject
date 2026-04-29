@@ -63,4 +63,4 @@ After `model.safetensors` exists under `Final_Source_Model/`, serve JSON classif
 
 Details, CORS, batching, and `curl` examples: **[`api/README.md`](api/README.md)** — interactive OpenAPI at `http://127.0.0.1:8080/docs`.
 
-**Google Cloud Run (E4 + few-shot Twi + few-shot Pidgin):** step-by-step `gcloud` commands in **[`deploy/gcp/README.md`](deploy/gcp/README.md)** for project **`zero-shot-494819`** (you run them locally after `gcloud auth login`).
+**Google Cloud Run (E4 + few-shot Twi + few-shot Pidgin):** run **`./deploy/gcp/deploy_all.sh`** from the repo root after `gcloud auth login` (see **[`deploy/gcp/README.md`](deploy/gcp/README.md)**).

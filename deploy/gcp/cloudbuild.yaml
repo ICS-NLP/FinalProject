@@ -1,0 +1,19 @@
+# Cloud Build: build and push the inference image (no weights in image).
+# Invoked by deploy_all.sh with --substitutions=_IMAGE=REGION-docker.pkg.dev/PROJECT/REPO/afrihate-api:TAG
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "-f"
+      - "deploy/gcp/Dockerfile"
+      - "-t"
+      - "${_IMAGE}"
+      - "."
+images:
+  - "${_IMAGE}"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _IMAGE: us-central1-docker.pkg.dev/zero-shot-494819/afrihate/afrihate-api:latest
