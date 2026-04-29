@@ -10,7 +10,7 @@ Multilingual fine-tuning (**Hausa, Amharic**, optional **Yoruba**) and **zero-sh
 |------|----------|
 | [`experiments/`](experiments/) | **Experiment_1–Experiment_3** folders (notebooks + README each) |
 | [`results/best_experiment_e4/`](results/best_experiment_e4/) | **E4 documentation hub** — README links to the deployable checkpoint and canonical figures/tables (no duplicate PNGs in Git) |
-| [`scripts/`](scripts/) | Helper CLIs (`compare_encoder_llm_matched_subset.py`, `make_training_curves.py`, `make_error_summary.py`) |
+| [`api/`](api/) | **FastAPI service** — `POST /predict` for web-app integration ([`api/README.md`](api/README.md)) |
 | `project_paths.py` | Shared `repo_root()` for scripts |
 | `Checkpoints/` | `experiment_log.csv`, `training_log_*.csv` (all phases write here) |
 | `Phase2_Outputs/` | Few-shot CSVs, plots, qualitative error markdown |
@@ -52,3 +52,13 @@ unset NLP_EXPERIMENT_ID NLP_SOURCE_LANGS NLP_MODEL NLP_LR NLP_NUM_EPOCHS
 Notebooks call `os.chdir` to the **repo root** on startup, so output paths (`Checkpoints/`, `Phase2_Outputs/`, …) stay stable even though `.ipynb` files live under `experiments/`.
 
 See [`EXPERIMENTS.md`](EXPERIMENTS.md) for the full experiment matrix, transfer-gap headline, paths to every artefact, and **[recommended model for deployment (E4)](EXPERIMENTS.md#recommended-model-for-deployment-e4)** (`Final_Source_Model/` + how to obtain `model.safetensors`).
+
+## HTTP API (for web apps)
+
+After `model.safetensors` exists under `Final_Source_Model/`, serve JSON classification from your network:
+
+```bash
+.venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8080
+```
+
+Details, CORS, batching, and `curl` examples: **[`api/README.md`](api/README.md)** — interactive OpenAPI at `http://127.0.0.1:8080/docs`.

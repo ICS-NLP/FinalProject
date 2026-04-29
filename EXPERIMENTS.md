@@ -51,6 +51,8 @@ For **cross-lingual hate-speech classification on Twi and Nigerian Pidgin** with
 
 The archive contains `state_dict`, `id2label`, and `label2id`. **GitHub rejects files larger than ~100 MB**; a 76L encoder is **~2 GB**, so a full `.pth` **cannot** be committed to a standard repo. Use **Hugging Face Hub** (`huggingface-cli upload`), **Git LFS** with a paid/large quota, or **shared cloud storage** — not a plain `git push` of the weight file.
 
+**HTTP API for colleagues.** A small **FastAPI** app in [`api/main.py`](api/main.py) exposes `POST /predict` and `POST /predict/batch` so a web backend can call the same checkpoint. Run **`uvicorn api.main:app`** from the repo root after weights exist; see [`api/README.md`](api/README.md) for CORS, env vars, and integration notes. This service does **not** include authentication — add a reverse proxy + API keys in production.
+
 After `git clone`, colleagues **must** either (1) run **Experiment 1** with the E4 environment (§9) to recreate `model.safetensors` (or `pytorch_model.bin`), or (2) receive that file via shared drive / Hugging Face Hub / artefact store and place it in `Final_Source_Model/`.
 
 ### Minimal inference load
@@ -150,6 +152,13 @@ Use this table to locate **every committed file**. Paths are relative to the **r
 | `Final_Source_Model/tokenizer.json` | SentencePiece tokenizer data |
 | `Final_Source_Model/tokenizer_config.json` | Tokenizer settings |
 | `Final_Source_Model/training_args.bin` | Serialized `TrainingArguments` |
+
+### HTTP API (FastAPI)
+
+| Path | Description |
+|------|-------------|
+| `api/main.py` | **`uvicorn api.main:app`** — `GET /health`, `POST /predict`, `POST /predict/batch` for web backends |
+| `api/README.md` | Run instructions, CORS, `curl` examples, integration notes |
 
 ### Report pointer (no duplicate binaries)
 
@@ -413,6 +422,13 @@ export NLP_TARGET_EPOCHS=4 NLP_TARGET_LR=2e-5
 # Optional: export OPENAI_API_KEY=... NLP_LLM_MODEL=gpt-4o-mini NLP_LLM_MODE=zeroshot
 # LLM-only (skip ~1h supervised re-run): export NLP_PHASE3_SKIP_SUPERVISED=1
 ./execute_notebook.sh experiments/Experiment_3/Phase3_TargetSupervised_LLM_Baseline.ipynb
+```
+
+### HTTP API (after `Final_Source_Model/` has weights)
+
+```bash
+.venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8080
+# Docs: http://127.0.0.1:8080/docs — see api/README.md for CORS and batch limits.
 ```
 
 ---
