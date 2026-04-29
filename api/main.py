@@ -32,18 +32,51 @@ _device: torch.device | None = None
 _id2label: dict[int, str] = {}
 _max_batch = 32
 
-# Shipped with every prediction so callers know what this head was trained/evaluated for.
-MODEL_SCOPE: dict[str, Any] = {
+# Default scope for E4 zero-shot; overridden by get_model_scope() when NLP_SERVE_VARIANT is set.
+_BASE_SCOPE: dict[str, Any] = {
     "base_encoder": "Davlan/afro-xlmr-large-76L",
     "fine_tune_languages": ["hau", "amh", "yor"],
     "zero_shot_eval_languages": ["twi", "pcm"],
     "label_schema": "AfriHate 3-class (Abuse / Hate / Normal)",
-    "out_of_scope_warning": (
+}
+
+
+def get_model_scope() -> dict[str, Any]:
+    """Human-facing scope; tune with NLP_SERVE_VARIANT on Cloud Run / second process."""
+    variant = os.environ.get("NLP_SERVE_VARIANT", "e4_zero").strip()
+    warn_en = (
         "This checkpoint is not an English toxicity detector. It was fine-tuned only on "
         "AfriHate posts in Hausa, Amharic, and Yoruba; English or other languages are out "
         "of distribution and can look nonsensical (e.g. clear threats predicted as Normal)."
-    ),
-}
+    )
+    if variant == "e4_zero":
+        return {
+            **_BASE_SCOPE,
+            "variant": variant,
+            "variant_name": "E4 cross-lingual zero-shot (hau+amh+yor → twi/pcm)",
+            "out_of_scope_warning": warn_en,
+        }
+    if variant == "fewshot_twi_5":
+        return {
+            **_BASE_SCOPE,
+            "variant": variant,
+            "variant_name": "Few-shot adapter — Twi (k=5 per class on top of E4 weights)",
+            "adapter_target": "twi",
+            "k_per_class": 5,
+            "out_of_scope_warning": warn_en
+            + " This adapter was further tuned on a small Twi slice; treat Pidgin zero-shot scores as out-of-distribution.",
+        }
+    if variant == "fewshot_pcm_5":
+        return {
+            **_BASE_SCOPE,
+            "variant": variant,
+            "variant_name": "Few-shot adapter — Nigerian Pidgin (k=5 per class on top of E4 weights)",
+            "adapter_target": "pcm",
+            "k_per_class": 5,
+            "out_of_scope_warning": warn_en
+            + " This adapter was further tuned on a small Pidgin slice; treat Twi scores as out-of-distribution.",
+        }
+    return {**_BASE_SCOPE, "variant": variant, "variant_name": variant, "out_of_scope_warning": warn_en}
 
 
 def _model_dir() -> Path:
@@ -160,7 +193,7 @@ def predict(body: PredictRequest):
     if err:
         raise HTTPException(status_code=503, detail=err)
     out = _predict_one(body.text.strip())
-    return {"model_scope": MODEL_SCOPE, "text": body.text, **out}
+    return {"model_scope": get_model_scope(), "text": body.text, **out}
 
 
 @app.post("/predict/batch")
@@ -177,6 +210,6 @@ def predict_batch(body: PredictBatchRequest):
             detail=f"Too many texts (max {_max_batch}). Raise NLP_SERVE_MAX_BATCH if needed.",
         )
     return {
-        "model_scope": MODEL_SCOPE,
+        "model_scope": get_model_scope(),
         "predictions": [{"text": t, **_predict_one(t)} for t in texts],
     }

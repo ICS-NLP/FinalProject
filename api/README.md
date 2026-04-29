@@ -33,14 +33,18 @@ Everything below is a **3‑class AfriHate head** (Abuse / Hate / Normal) unless
 
 ```bash
 # Terminal A — E4 cross-lingual (default path)
+export NLP_SERVE_VARIANT=e4_zero
 .venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8080
 
-# Terminal B — e.g. few-shot Twi k=5 adapter (after Experiment 2 has written this folder)
+# Terminal B — few-shot Twi k=5 adapter (after Experiment 2 has written this folder)
 export NLP_SERVE_MODEL_DIR="$PWD/Phase2_Outputs/fewshot_twi_5"
+export NLP_SERVE_VARIANT=fewshot_twi_5
 .venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8081
 ```
 
 Your web app can call `http://localhost:8080/predict` vs `http://localhost:8081/predict` with the same JSON body.
+
+**Google Cloud Run:** deploy all three variants (E4 + few-shot Twi + few-shot Pidgin) with the same Docker image — see **[`../deploy/gcp/README.md`](../deploy/gcp/README.md)** for project `zero-shot-494819`.
 
 ## Prerequisites
 

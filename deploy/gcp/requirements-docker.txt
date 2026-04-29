@@ -1,0 +1,8 @@
+# Minimal deps for api/main.py inference (torch installed in Dockerfile).
+transformers
+accelerate
+huggingface_hub
+python-dotenv
+fastapi>=0.115
+uvicorn[standard]>=0.32
+google-cloud-storage>=2.14

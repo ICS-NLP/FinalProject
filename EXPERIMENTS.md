@@ -158,7 +158,11 @@ Use this table to locate **every committed file**. Paths are relative to the **r
 | Path | Description |
 |------|-------------|
 | `api/main.py` | **`uvicorn api.main:app`** — `GET /health`, `POST /predict`, `POST /predict/batch` for web backends |
-| `api/README.md` | Run instructions, CORS, `curl` examples, integration notes |
+| `api/README.md` | Run instructions, CORS, `curl` examples, multi-model comparison |
+| `deploy/gcp/Dockerfile` | CPU inference image (weights loaded from GCS at startup via `GCS_MODEL_URI`) |
+| `deploy/gcp/README.md` | **Cloud Run** deploy for `zero-shot-494819` — three services (E4, few-shot Twi, few-shot Pidgin) |
+| `deploy/gcp/entrypoint.sh` | Downloads weights then starts uvicorn (honours Cloud Run `PORT`) |
+| `deploy/gcp/fetch_model_from_gcs.py` | Pulls a model prefix from GCS into `/app/served_model` |
 
 ### Report pointer (no duplicate binaries)
 

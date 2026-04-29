@@ -10,7 +10,7 @@ Multilingual fine-tuning (**Hausa, Amharic**, optional **Yoruba**) and **zero-sh
 |------|----------|
 | [`experiments/`](experiments/) | **Experiment_1–Experiment_3** folders (notebooks + README each) |
 | [`results/best_experiment_e4/`](results/best_experiment_e4/) | **E4 documentation hub** — README links to the deployable checkpoint and canonical figures/tables (no duplicate PNGs in Git) |
-| [`api/`](api/) | **FastAPI service** — `POST /predict` for web-app integration ([`api/README.md`](api/README.md)) |
+| [`deploy/gcp/`](deploy/gcp/) | **Dockerfile + Cloud Run README** — deploy E4 + few-shot Twi/Pidgin (k=5) to GCP project `zero-shot-494819` |
 | `project_paths.py` | Shared `repo_root()` for scripts |
 | `Checkpoints/` | `experiment_log.csv`, `training_log_*.csv` (all phases write here) |
 | `Phase2_Outputs/` | Few-shot CSVs, plots, qualitative error markdown |
@@ -62,3 +62,5 @@ After `model.safetensors` exists under `Final_Source_Model/`, serve JSON classif
 ```
 
 Details, CORS, batching, and `curl` examples: **[`api/README.md`](api/README.md)** — interactive OpenAPI at `http://127.0.0.1:8080/docs`.
+
+**Google Cloud Run (E4 + few-shot Twi + few-shot Pidgin):** step-by-step `gcloud` commands in **[`deploy/gcp/README.md`](deploy/gcp/README.md)** for project **`zero-shot-494819`** (you run them locally after `gcloud auth login`).
