@@ -1,6 +1,6 @@
 # Deploy AfriHate API to **Google Cloud Run** (project `zero-shot-494819`)
 
-This guide deploys **three** services so your UI can compare:
+This guide deploys **up to three** Cloud Run services so your UI can compare:
 
 | Cloud Run service (example name) | Weights in GCS (you choose bucket + prefix) | Env `NLP_SERVE_VARIANT` |
 |----------------------------------|-----------------------------------------------|-------------------------|
@@ -18,7 +18,7 @@ Use **k=5** few-shot adapters because your results showed the clearest Pidgin ga
 
 ## Automated one-shot deploy (recommended)
 
-From **repository root** (`FinalProject/`), after weights and few-shot folders exist:
+From **repository root** (`FinalProject/`), after **E4** weights exist under `Final_Source_Model/`. Few-shot folders are optional (see script flags above).
 
 ```bash
 gcloud auth login
