@@ -4,7 +4,8 @@
 #
 # Prerequisites:
 #   - gcloud CLI installed and authenticated:  gcloud auth login
-#   - Billing enabled on the GCP project
+#   - gcloud auth application-default login
+#   - Billing linked to the target project (Console → Billing → link account); required for Run/Build/Artifact Registry
 #   - From repo root, trained weights exist:
 #       Final_Source_Model/model.safetensors (or pytorch_model.bin)
 #       Phase2_Outputs/fewshot_twi_5/  and  fewshot_pcm_5/  (after Experiment 2)
@@ -94,13 +95,48 @@ gcloud auth application-default print-access-token >/dev/null 2>&1 || {
   exit 1
 }
 
+# Align ADC quota/billing metadata with the project you are deploying (avoids warnings
+# when your default quota project was another GCP project, e.g. zephyrmobile-492023).
+if gcloud auth application-default set-quota-project "${PROJECT_ID}" 2>/dev/null; then
+  echo "==> Application Default Credentials quota project set to ${PROJECT_ID}"
+else
+  echo "==> (Optional) Run: gcloud auth application-default set-quota-project ${PROJECT_ID}" >&2
+fi
+
+echo "==> Billing check (Cloud Run / Build / Artifact Registry require an active billing account)"
+if ! BILLING_ACCOUNT="$(gcloud billing projects describe "${PROJECT_ID}" --format='value(billingAccountName)' 2>/dev/null)" || [[ -z "${BILLING_ACCOUNT}" ]]; then
+  cat <<EOF >&2
+
+ERROR: Project '${PROJECT_ID}' has no billing account linked (or you lack permission to read it).
+
+Fix in the console (log in as a project Owner):
+  https://console.cloud.google.com/billing/linkedaccount?project=${PROJECT_ID}
+
+Link any active billing account, wait a minute, then re-run:
+  ./deploy/gcp/deploy_all.sh
+
+(GCP error UREQ_PROJECT_BILLING_NOT_FOUND / "Billing account ... is not found" means the same thing.)
+
+EOF
+  exit 1
+fi
+echo "    billingAccountName=${BILLING_ACCOUNT}"
+
 echo "==> Enable APIs"
-gcloud services enable \
+if ! gcloud services enable \
   run.googleapis.com \
   artifactregistry.googleapis.com \
   cloudbuild.googleapis.com \
   storage.googleapis.com \
-  --project="${PROJECT_ID}"
+  --project="${PROJECT_ID}"; then
+  cat <<'EOF' >&2
+
+ERROR: gcloud services enable failed.
+If the message mentions billing, finish linking a billing account (see URL above) and retry.
+
+EOF
+  exit 1
+fi
 
 echo "==> Artifact Registry repo: ${AR_REPO}"
 if ! gcloud artifacts repositories describe "${AR_REPO}" --location="${REGION}" --project="${PROJECT_ID}" >/dev/null 2>&1; then

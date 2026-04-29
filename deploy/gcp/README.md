@@ -38,6 +38,23 @@ Options:
 
 Override defaults with env vars, e.g. `GCS_MODEL_BUCKET=my-unique-bucket-name`.
 
+### If deploy fails: billing (`UREQ_PROJECT_BILLING_NOT_FOUND`)
+
+Cloud Run, Cloud Build, and Artifact Registry **require a billing account** on the target project.
+
+1. Open **[Billing → link a billing account](https://console.cloud.google.com/billing/linkedaccount?project=zero-shot-494819)** for project `zero-shot-494819` (use a project Owner / Billing Admin account).
+2. Wait ~1 minute, then run `./deploy/gcp/deploy_all.sh` again.
+
+Without billing, `gcloud services enable` fails with *Billing account for project … is not found*.
+
+### If you see a quota-project warning (`zephyrmobile-492023` vs `zero-shot-494819`)
+
+After `gcloud auth application-default login`, your ADC file may still point quota at another project. The deploy script runs:
+
+`gcloud auth application-default set-quota-project zero-shot-494819`
+
+You can run that manually anytime so client libraries and warnings match the deploy project.
+
 ---
 
 ## 0. One-time: APIs, Artifact Registry, bucket
