@@ -32,6 +32,19 @@ _device: torch.device | None = None
 _id2label: dict[int, str] = {}
 _max_batch = 32
 
+# Shipped with every prediction so callers know what this head was trained/evaluated for.
+MODEL_SCOPE: dict[str, Any] = {
+    "base_encoder": "Davlan/afro-xlmr-large-76L",
+    "fine_tune_languages": ["hau", "amh", "yor"],
+    "zero_shot_eval_languages": ["twi", "pcm"],
+    "label_schema": "AfriHate 3-class (Abuse / Hate / Normal)",
+    "out_of_scope_warning": (
+        "This checkpoint is not an English toxicity detector. It was fine-tuned only on "
+        "AfriHate posts in Hausa, Amharic, and Yoruba; English or other languages are out "
+        "of distribution and can look nonsensical (e.g. clear threats predicted as Normal)."
+    ),
+}
+
 
 def _model_dir() -> Path:
     override = os.environ.get("NLP_SERVE_MODEL_DIR")
@@ -78,7 +91,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="AfriHate E4 classifier API",
-    description="Cross-lingual hate speech (Abuse / Hate / Normal) using the fine-tuned Davlan/afro-xlmr-large-76L checkpoint.",
+    description=(
+        "AfriHate 3-class head fine-tuned on **Hausa + Amharic + Yoruba** (E4). "
+        "Validated in the paper/repo for **zero-shot Twi and Nigerian Pidgin** — not for arbitrary English. "
+        "Each JSON response includes `model_scope` explaining this."
+    ),
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -143,7 +160,7 @@ def predict(body: PredictRequest):
     if err:
         raise HTTPException(status_code=503, detail=err)
     out = _predict_one(body.text.strip())
-    return {"text": body.text, **out}
+    return {"model_scope": MODEL_SCOPE, "text": body.text, **out}
 
 
 @app.post("/predict/batch")
@@ -159,4 +176,7 @@ def predict_batch(body: PredictBatchRequest):
             status_code=400,
             detail=f"Too many texts (max {_max_batch}). Raise NLP_SERVE_MAX_BATCH if needed.",
         )
-    return {"predictions": [{"text": t, **_predict_one(t)} for t in texts]}
+    return {
+        "model_scope": MODEL_SCOPE,
+        "predictions": [{"text": t, **_predict_one(t)} for t in texts],
+    }

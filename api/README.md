@@ -2,6 +2,14 @@
 
 Serves the **best cross-lingual checkpoint** (Experiment 1, E4: `Davlan/afro-xlmr-large-76L` on Hausa + Amharic + Yoruba) from `Final_Source_Model/`.
 
+## Why a clearly toxic **English** line can still be scored `Normal`
+
+The E4 checkpoint is **not** an English toxicity model. It was **fine-tuned only on AfriHate posts in Hausa, Amharic, and Yoruba**, then studied for **zero-shot transfer to Twi and Nigerian Pidgin**. Your sentence is **out-of-distribution**: the head never saw English training distribution or English-style threats, so logits can look arbitrary or wrongly “safe” even when a human reader is alarmed.
+
+AfriHate **label definitions** (Abuse vs Hate vs Normal) also follow the dataset’s guidelines, which do not match every intuitive English reading.
+
+**Takeaway:** treat **`/predict` on English** as **unreliable** unless you validate separately. For demos, use **Twi, Pidgin, or the source languages** the project was built for; for production English, use a model trained on English (or multilingual data that includes your target register) and keep **human review** for high-stakes decisions. See **`EXPERIMENTS.md`** (qualitative error analysis) for known failure modes even **on** target languages.
+
 ## Prerequisites
 
 - Repo `.venv` with `requirements.txt` + API deps installed (see root `README.md`).
@@ -43,10 +51,17 @@ export NLP_SERVE_CORS_ORIGINS="https://your-app.example,http://localhost:3000"
 1. **Same machine / private network:** call `http://<server-ip>:8080/predict` from your backend (Node, Django, etc.) with `fetch` or `axios` — keep the model server private; do not expose without auth in production.
 2. **Production:** put **nginx** or a cloud load balancer in front, add **HTTPS**, **API keys** or **OAuth** on your own gateway (this service does not ship authentication).
 
-Response shape for `POST /predict`:
+Response shape for `POST /predict` (every response includes **`model_scope`** so UIs can show a banner):
 
 ```json
 {
+  "model_scope": {
+    "base_encoder": "Davlan/afro-xlmr-large-76L",
+    "fine_tune_languages": ["hau", "amh", "yor"],
+    "zero_shot_eval_languages": ["twi", "pcm"],
+    "label_schema": "AfriHate 3-class (Abuse / Hate / Normal)",
+    "out_of_scope_warning": "…"
+  },
   "text": "...",
   "label": "Normal",
   "label_id": 2,
